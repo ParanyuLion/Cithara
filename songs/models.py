@@ -2,7 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 
 
-class Genre(models.Model.TextChoices):
+class Genre(models.TextChoices):
     POP = 'Pop', 'Pop'
     ROCK = 'Rock', 'Rock'
     JAZZ = 'Jazz', 'Jazz'
@@ -10,7 +10,7 @@ class Genre(models.Model.TextChoices):
     COUNTRY = 'Country', 'Country'
     
     
-class Status(models.Model.TextChoices):
+class Status(models.TextChoices):
     PENDING = 'Pending', 'Pending'
     GENERATING = 'Generating', 'Generating'
     COMPLETED = 'Completed', 'Completed'
