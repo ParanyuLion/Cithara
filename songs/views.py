@@ -77,9 +77,13 @@ def song_detail(request, song_id):
 def song_delete(request, song_id):
     try:
         song = get_object_or_404(Song, id=song_id)
+        
+        if song.deleted_at is not None:
+            return JsonResponse({"error": "Song already deleted"}, status=400)
+        
         song.deleted_at = timezone.now()
         song.save()
-        return JsonResponse({"message": "Deleted (Soft Delete)"}, status=204)
+        return JsonResponse({"message": "Deleted (Soft Delete)"}, status=200)
     except Http404:
         return JsonResponse({"error": "Not Found"}, status=404)
     except Exception as e:
