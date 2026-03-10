@@ -1,4 +1,5 @@
 import json
+from django.forms import ValidationError
 from django.utils import timezone
 from django.http import JsonResponse, Http404
 from django.shortcuts import get_object_or_404
@@ -33,7 +34,7 @@ def song_create(request):
         return JsonResponse({"error": "No user found. Create user first."}, status=400)
     
     try:
-        song = Song.objects.create(
+        song = Song(
             title=data.get('title'),
             genre=data.get('genre'),
             mood=data.get('mood'),
@@ -44,7 +45,11 @@ def song_create(request):
             audio_file="demo.mp3",
             status='Completed'
         )
+        song.full_clean()
+        song.save()
         return JsonResponse({"message": "Created", "id": song.id, "title": song.title}, status=201)
+    except ValidationError as e:
+        return JsonResponse({"error": e.message_dict}, status=400)
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
         
