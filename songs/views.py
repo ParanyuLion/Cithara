@@ -93,3 +93,35 @@ def song_delete(request, song_id):
         return JsonResponse({"error": "Not Found"}, status=404)
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
+
+
+@csrf_exempt
+@require_http_methods(["PATCH"])
+def song_update(request, song_id):
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({"error": "Invalid JSON"}, status=400)
+    try:
+        song = get_object_or_404(Song, id=song_id)
+        
+        if song.deleted_at is not None:
+            return JsonResponse({"error": "Song already deleted"}, status=400)
+        
+        song.status = data.get('status', song.status)
+        song.full_clean()
+        song.save()
+        return JsonResponse({
+                    "message": "Updated successfully",
+                    "id": song.id,
+                    "title": song.title,
+                    "status": song.status
+                }, status=200)
+    
+    except ValidationError as e:
+        return JsonResponse({"error": e.message_dict}, status=400)
+    except Http404:
+        return JsonResponse({"error": "Not Found"}, status=404)
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+
