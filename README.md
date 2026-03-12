@@ -25,6 +25,10 @@ Cithara/
     └── migrations/        # Database migrations
 ```
 
+## Domain Model
+
+![Domain Model](DomainModel.png)
+
 ## Setup Instructions
 
 1. **Create a virtual environment:**
