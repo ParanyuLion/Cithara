@@ -71,8 +71,8 @@ Access the Django admin panel at `http://127.0.0.1:8000/admin/` with your superu
 ## Features
 
 - Song management system
-- Django admin interface for managing songs
-- RESTful URL routing
+- Django admin interface
+- URL routing
 
 ## Notes
 
