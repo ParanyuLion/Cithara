@@ -95,6 +95,10 @@ None
 - `200 OK` - Successfully retrieved songs
 - `500 Internal Server Error` - Server error
 
+**Screenshot:**
+
+![Get Songs](API_screenshot/get%20songs.png)
+
 ---
 
 ### 2. Create Song
@@ -155,6 +159,10 @@ Content-Type: application/json
 
 - `prompt`
 
+**Screenshot:**
+
+![Create Song](API_screenshot/create%20song.png)
+
 ---
 
 ### 3. Get Song Details
@@ -195,6 +203,10 @@ Retrieves detailed information about a specific song.
 - `200 OK` - Song found and returned
 - `404 Not Found` - Song with given ID not found
 - `500 Internal Server Error` - Server error
+
+**Screenshot:**
+
+![Get Song Detail](API_screenshot/get%20song%20detail.png)
 
 ---
 
@@ -248,6 +260,10 @@ Content-Type: application/json
 
 - `status`
 
+**Screenshot:**
+
+![Update Song Status](API_screenshot/update%20song%20status.png)
+
 ---
 
 ### 5. Delete Song
@@ -279,6 +295,10 @@ Soft deletes a song (marks as deleted without removing from database).
 - `400 Bad Request` - Song already deleted
 - `404 Not Found` - Song not found
 - `500 Internal Server Error` - Server error
+
+**Screenshot:**
+
+![Delete Song](API_screenshot/delete%20song.png)
 
 ---
 
