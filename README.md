@@ -78,6 +78,17 @@ Access the Django admin panel at `http://127.0.0.1:8000/admin/` with your superu
 - Django admin interface
 - URL routing
 
+## API Documentation
+
+For detailed information about the API endpoints, request/response formats, and usage examples, see [API.md](API.md).
+
+The API provides endpoints for:
+- Listing all songs
+- Creating new songs
+- Retrieving song details
+- Updating songs
+- Deleting songs (soft delete)
+
 ## Notes
 
 - Database: SQLite (db.sqlite3)
