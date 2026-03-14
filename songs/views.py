@@ -57,7 +57,7 @@ def song_create(request):
 @require_http_methods(["GET"])
 def song_detail(request, song_id):
     try:
-        song = get_object_or_404(Song, id=song_id)
+        song = get_object_or_404(Song.objects.filter(deleted_at__isnull=True), id=song_id)
         return JsonResponse({
             "id": song.id,
             "title": song.title,
