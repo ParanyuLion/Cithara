@@ -29,6 +29,8 @@ Cithara/
 
 ![Domain Model](DomainModel.png)
 
+The Library entity was merged into the User model to simplify the 1:1 relationship and optimize query performance.
+
 ## Setup Instructions
 
 1. **Create a virtual environment:**
