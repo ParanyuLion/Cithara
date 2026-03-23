@@ -1,20 +1,8 @@
-from django.db import models
 from django.contrib.auth.models import User
+from django.db import models
 
-
-class Genre(models.TextChoices):
-    POP = 'Pop', 'Pop'
-    ROCK = 'Rock', 'Rock'
-    JAZZ = 'Jazz', 'Jazz'
-    HIPHOP = 'Hip-Hop', 'Hip-Hop'
-    COUNTRY = 'Country', 'Country'
-    
-    
-class Status(models.TextChoices):
-    PENDING = 'Pending', 'Pending'
-    GENERATING = 'Generating', 'Generating'
-    COMPLETED = 'Completed', 'Completed'
-    FAILED = 'Failed', 'Failed'
+from .genre import Genre
+from .status import Status
 
 
 class Song(models.Model):
@@ -24,8 +12,8 @@ class Song(models.Model):
     ocasion = models.CharField(max_length=100)
     prompt = models.CharField(max_length=1000, blank=True, null=True)
     singer_voice = models.CharField(max_length=100)
-    
-    audio_file = models.FileField(upload_to='songs/', null=True, blank=True)
+
+    audio_file = models.FileField(upload_to="songs/", null=True, blank=True)
     shareable_link = models.URLField(max_length=500, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     deleted_at = models.DateTimeField(blank=True, null=True)
