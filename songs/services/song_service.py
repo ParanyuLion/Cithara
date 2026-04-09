@@ -80,7 +80,7 @@ class SongService:
 
             if result.audio_url:
                 logger.info("Synchronous generation for song %d, audio_url=%s", song.id, result.audio_url)
-                audio_file = self._download_audio(result.audio_url)
+                audio_file = ContentFile(result.audio_content, name=f"{result.task_id}.mp3") if result.audio_content else None
                 return self.repository.update_status(
                     song, Status.COMPLETED,
                     suno_task_id=result.task_id,
