@@ -16,4 +16,4 @@ class MockSongGeneratorStrategy(SongGeneratorStrategy):
 
     def generate(self, request: GenerationRequest) -> GenerationResult:
         task_id = f"mock-{uuid.uuid4().hex}"
-        return GenerationResult(task_id=task_id)
+        return GenerationResult(task_id=task_id, audio_url=self.MOCK_AUDIO_URL)

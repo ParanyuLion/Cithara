@@ -14,6 +14,7 @@ class GenerationRequest:
 class GenerationResult:
     """Output returned by any song generation strategy."""
     task_id: str
+    audio_url: str | None = None
 
 
 class SongGeneratorStrategy(ABC):

@@ -6,7 +6,7 @@ from django.core.files.base import ContentFile
 
 from songs.models import Song, Status
 from songs.repositories import SongRepository
-from songs.clients import get_generator_strategy, GenerationRequest, MockSongGeneratorStrategy
+from songs.clients import get_generator_strategy, GenerationRequest
 
 logger = logging.getLogger(__name__)
 
@@ -78,14 +78,13 @@ class SongService:
             )
             result = self.generator.generate(request)
 
-            if isinstance(self.generator, MockSongGeneratorStrategy):
-                audio_url = MockSongGeneratorStrategy.MOCK_AUDIO_URL
-                logger.info("Mock generation for song %d, audio_url=%s", song.id, audio_url)
-                audio_file = self._download_audio(audio_url)
+            if result.audio_url:
+                logger.info("Synchronous generation for song %d, audio_url=%s", song.id, result.audio_url)
+                audio_file = self._download_audio(result.audio_url)
                 return self.repository.update_status(
                     song, Status.COMPLETED,
                     suno_task_id=result.task_id,
-                    shareable_link=audio_url,
+                    shareable_link=result.audio_url,
                     audio_file=audio_file,
                 )
 
