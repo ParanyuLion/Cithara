@@ -13,6 +13,7 @@ class Song(models.Model):
     prompt = models.CharField(max_length=1000, blank=True, null=True)
     singer_voice = models.CharField(max_length=100)
 
+    suno_task_id = models.CharField(max_length=100, blank=True, null=True)
     audio_file = models.FileField(upload_to="songs/", null=True, blank=True)
     shareable_link = models.URLField(max_length=500, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)

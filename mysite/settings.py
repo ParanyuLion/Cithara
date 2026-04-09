@@ -10,10 +10,16 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+import os
 from pathlib import Path
+
+from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Load project-level .env values into process environment for local development.
+load_dotenv(BASE_DIR / ".env")
 
 
 # Quick-start development settings - unsuitable for production
@@ -25,7 +31,7 @@ SECRET_KEY = 'django-insecure-%=pu6c^5*a9(-vh^6byt3!&!1l22z6rfa3xea%ktc6@!1y+tzg
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '.ngrok-free.app', '.ngrok-free.dev', '.ngrok.io']
 
 
 # Application definition
@@ -121,3 +127,18 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {"console": {"class": "logging.StreamHandler"}},
+    "loggers": {
+        "songs": {"handlers": ["console"], "level": "DEBUG", "propagate": False},
+    },
+}
+
+# SUNO AI music generation API (sunoapi.org)
+SUNO_API_BASE_URL = os.environ.get("SUNO_API_BASE_URL", "https://api.sunoapi.org")
+SUNO_API_KEY = os.environ.get("SUNO_API_KEY", "")
+SUNO_MODEL = os.environ.get("SUNO_MODEL", "V4")          # V4 | V4_5 | V4_5PLUS | V5 | V5_5
+SUNO_CALLBACK_URL = os.environ.get("SUNO_CALLBACK_URL", "")  # optional webhook
