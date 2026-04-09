@@ -20,7 +20,7 @@ classDiagram
     class SongService {
         <<Service>>
         -repository : SongRepository
-        -suno_client : SunoClient
+        -generator : SongGeneratorStrategy
         +list_songs() QuerySet
         +get_song(song_id) Song
         +create_song(title, genre, mood, ocasion, singer_voice, creator, prompt) Song
@@ -44,6 +44,23 @@ classDiagram
     }
 
     %% ── Client Layer ────────────────────────────────────────────────────────
+    class SongGeneratorStrategy {
+        <<Strategy interface>>
+        +generate(request: GenerationRequest) GenerationResult
+    }
+
+    class MockSongGeneratorStrategy {
+        <<Strategy - Mock>>
+        +MOCK_AUDIO_URL : str
+        +generate(request) GenerationResult
+    }
+
+    class SunoSongGeneratorStrategy {
+        <<Strategy - Suno>>
+        -_client : SunoClient
+        +generate(request) GenerationResult
+    }
+
     class SunoClient {
         <<Client>>
         -base_url : str
@@ -51,6 +68,19 @@ classDiagram
         -_model : str
         -_callback_url : str
         +generate(prompt, style, title) str
+        +get_status(task_id) dict
+    }
+
+    class GenerationRequest {
+        <<DataClass>>
+        +prompt : str
+        +style : str
+        +title : str
+    }
+
+    class GenerationResult {
+        <<DataClass>>
+        +task_id : str
     }
 
     %% ── Domain Layer ────────────────────────────────────────────────────────
@@ -90,12 +120,17 @@ classDiagram
     }
 
     %% ── Relationships ───────────────────────────────────────────────────────
-    SongView       --> SongService    : uses
-    SongService    --> SongRepository : uses
-    SongService    --> SunoClient     : uses
-    SongRepository --> Song           : manages
-    Song           --> Genre          : has
-    Song           --> Status         : has
+    SongView                  --> SongService             : uses
+    SongService               --> SongRepository          : uses
+    SongService               --> SongGeneratorStrategy   : uses
+    SongGeneratorStrategy     <|-- MockSongGeneratorStrategy  : implements
+    SongGeneratorStrategy     <|-- SunoSongGeneratorStrategy  : implements
+    SunoSongGeneratorStrategy --> SunoClient              : delegates to
+    SongGeneratorStrategy     --> GenerationRequest       : accepts
+    SongGeneratorStrategy     --> GenerationResult        : returns
+    SongRepository            --> Song                    : manages
+    Song                      --> Genre                   : has
+    Song                      --> Status                  : has
 ```
 
 ## Layer Responsibilities

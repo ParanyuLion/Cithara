@@ -123,6 +123,9 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
+MEDIA_URL = 'media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
@@ -137,8 +140,11 @@ LOGGING = {
     },
 }
 
+# Song generation strategy: "mock" (offline) | "suno" (calls sunoapi.org)
+GENERATOR_STRATEGY = os.environ.get("GENERATOR_STRATEGY", "suno")
+
 # SUNO AI music generation API (sunoapi.org)
 SUNO_API_BASE_URL = os.environ.get("SUNO_API_BASE_URL", "https://api.sunoapi.org")
 SUNO_API_KEY = os.environ.get("SUNO_API_KEY", "")
 SUNO_MODEL = os.environ.get("SUNO_MODEL", "V4")          # V4 | V4_5 | V4_5PLUS | V5 | V5_5
-SUNO_CALLBACK_URL = os.environ.get("SUNO_CALLBACK_URL", "")  # optional webhook
+SUNO_CALLBACK_URL = os.environ.get("SUNO_CALLBACK_URL", "")  # required for suno strategy

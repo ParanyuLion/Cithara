@@ -1,8 +1,12 @@
 import logging
+import urllib.parse
+
+import requests
+from django.core.files.base import ContentFile
 
 from songs.models import Song, Status
 from songs.repositories import SongRepository
-from songs.clients import SunoClient
+from songs.clients import get_generator_strategy, GenerationRequest, MockSongGeneratorStrategy
 
 logger = logging.getLogger(__name__)
 
@@ -12,7 +16,7 @@ class SongService:
 
     def __init__(self):
         self.repository = SongRepository()
-        self.suno_client = SunoClient()
+        self.generator = get_generator_strategy()
 
     # ── Queries ───────────────────────────────────────────────────────────────
 
@@ -57,22 +61,39 @@ class SongService:
 
     def generate_song(self, song: Song) -> Song:
         """
-        Submit the song to SUNO. Returns immediately with GENERATING status.
-        The actual completion is handled via the SUNO callback.
+        Submit the song to the active generation strategy.
+
+        - Suno strategy: returns immediately with GENERATING status;
+          completion is handled via the /songs/suno-callback/ webhook.
+        - Mock strategy: completes synchronously with a placeholder audio URL.
+
         Never raises — sets status to FAILED on any error.
         """
         try:
             prompt = song.prompt or self._build_prompt(song)
-            task_id = self.suno_client.generate(
+            request = GenerationRequest(
                 prompt=prompt,
                 style=song.genre,
                 title=song.title,
             )
+            result = self.generator.generate(request)
+
+            if isinstance(self.generator, MockSongGeneratorStrategy):
+                audio_url = MockSongGeneratorStrategy.MOCK_AUDIO_URL
+                logger.info("Mock generation for song %d, audio_url=%s", song.id, audio_url)
+                audio_file = self._download_audio(audio_url)
+                return self.repository.update_status(
+                    song, Status.COMPLETED,
+                    suno_task_id=result.task_id,
+                    shareable_link=audio_url,
+                    audio_file=audio_file,
+                )
+
             return self.repository.update_status(
-                song, Status.GENERATING, suno_task_id=task_id
+                song, Status.GENERATING, suno_task_id=result.task_id
             )
         except Exception as e:
-            logger.exception("SUNO generation failed for song %d: %s", song.id, e)
+            logger.exception("Song generation failed for song %d: %s", song.id, e)
             return self.repository.update_status(song, Status.FAILED)
 
     def handle_suno_callback(self, task_id: str, callback_type: str, tracks: list) -> bool:
@@ -97,13 +118,18 @@ class SongService:
                     track.get("stream_audio_url", ""),
                     track.get("duration", "unknown"),
                 )
-            audio_url = tracks[0].get("audio_url", "")
-            self.repository.update_status(
-                song, Status.COMPLETED,
-                audio_url=audio_url,
-                shareable_link=audio_url,
-            )
-            logger.info("Song %d completed via SUNO callback", song.id)
+            try:
+                audio_url = tracks[0].get("audio_url", "")
+                audio_file = self._download_audio(audio_url)
+                self.repository.update_status(
+                    song, Status.COMPLETED,
+                    shareable_link=audio_url,
+                    audio_file=audio_file,
+                )
+                logger.info("Song %d completed via SUNO callback", song.id)
+            except Exception as e:
+                logger.exception("Failed to download audio for song %d: %s", song.id, e)
+                self.repository.update_status(song, Status.FAILED)
         elif callback_type == "error":
             self.repository.update_status(song, Status.FAILED)
             logger.warning("Song %d failed via SUNO callback", song.id)
@@ -137,3 +163,10 @@ class SongService:
             f"suitable for {song.ocasion}, "
             f"sung by a {song.singer_voice} voice"
         )
+
+    def _download_audio(self, url: str) -> ContentFile:
+        """Download an audio file from a URL and return a Django ContentFile."""
+        response = requests.get(url, timeout=60)
+        response.raise_for_status()
+        filename = urllib.parse.urlparse(url).path.split("/")[-1] or "song.mp3"
+        return ContentFile(response.content, name=filename)

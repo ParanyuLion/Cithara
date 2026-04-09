@@ -38,11 +38,11 @@ class SongRepository:
         self,
         song: Song,
         status: str,
-        audio_url: str = None,
         shareable_link: str = None,
         suno_task_id: str = None,
+        audio_file=None,
     ) -> Song:
-        """Update the song's status and optionally its media URLs / task ID."""
+        """Update the song's status and optionally its media file / link / task ID."""
         update_fields = ["status"]
         song.status = status
 
@@ -50,14 +50,13 @@ class SongRepository:
             song.suno_task_id = suno_task_id
             update_fields.append("suno_task_id")
 
-        if audio_url is not None:
-            song.shareable_link = audio_url
-            update_fields.append("shareable_link")
-
         if shareable_link is not None:
             song.shareable_link = shareable_link
-            if "shareable_link" not in update_fields:
-                update_fields.append("shareable_link")
+            update_fields.append("shareable_link")
+
+        if audio_file is not None:
+            song.audio_file.save(audio_file.name, audio_file, save=False)
+            update_fields.append("audio_file")
 
         song.save(update_fields=update_fields)
         return song
