@@ -97,6 +97,9 @@ The API provides endpoints for:
 
 The application supports two interchangeable generation strategies, selected via the `GENERATOR_STRATEGY` environment variable.
 
+### Minimal demonstration:
+https://docs.google.com/document/d/1Rptjo4XFmIBNdzM6YRPJNi_vqKKYi73lGFW-fOgnpiQ/edit?usp=sharing 
+
 ### Mock Mode (offline, no API key required)
 
 Generates a song instantly using a placeholder audio URL — no external API calls, no network needed.
