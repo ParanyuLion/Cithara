@@ -1,4 +1,4 @@
-from songs.clients.base import SongGeneratorStrategy, GenerationRequest, GenerationResult
+from songs.clients.base import SongGeneratorStrategy, GenerationRequest, GenerationResult, StatusResult
 from songs.clients.mock_strategy import MockSongGeneratorStrategy
 from songs.clients.suno_client import SunoClient
 from songs.clients.suno_strategy import SunoSongGeneratorStrategy
@@ -30,6 +30,7 @@ __all__ = [
     "SongGeneratorStrategy",
     "GenerationRequest",
     "GenerationResult",
+    "StatusResult",
     "MockSongGeneratorStrategy",
     "SunoClient",
     "SunoSongGeneratorStrategy",

@@ -1,4 +1,4 @@
-from songs.clients.base import SongGeneratorStrategy, GenerationRequest, GenerationResult
+from songs.clients.base import SongGeneratorStrategy, GenerationRequest, GenerationResult, StatusResult
 from songs.clients.suno_client import SunoClient
 
 
@@ -20,3 +20,11 @@ class SunoSongGeneratorStrategy(SongGeneratorStrategy):
             title=request.title,
         )
         return GenerationResult(task_id=task_id)
+
+    def get_status(self, task_id: str) -> StatusResult:
+        raw = self._client.get_status(task_id)
+        return StatusResult(
+            status=raw["status"],
+            audio_url=raw.get("audio_url"),
+            shareable_link=raw.get("shareable_link"),
+        )

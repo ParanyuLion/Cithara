@@ -18,6 +18,15 @@ class GenerationResult:
     audio_content: bytes | None = None
 
 
+class StatusResult:
+    """Normalised status returned by get_status()."""
+
+    def __init__(self, status: str, audio_url: str | None = None, shareable_link: str | None = None):
+        self.status = status           # "PENDING" | "SUCCESS" | "FAILED"
+        self.audio_url = audio_url
+        self.shareable_link = shareable_link
+
+
 class SongGeneratorStrategy(ABC):
     """Abstract strategy interface for song generation."""
 
@@ -28,5 +37,14 @@ class SongGeneratorStrategy(ABC):
 
         Returns a GenerationResult containing a task_id that can be used
         to track or retrieve the generation later.
+        Raises an exception on failure.
+        """
+
+    @abstractmethod
+    def get_status(self, task_id: str) -> StatusResult:
+        """
+        Check the status of a previously submitted generation task.
+
+        Returns a StatusResult with status "PENDING", "SUCCESS", or "FAILED".
         Raises an exception on failure.
         """
