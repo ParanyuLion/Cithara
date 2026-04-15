@@ -1,10 +1,10 @@
 /* Song detail page — fetches GET /songs/:id/ and displays all fields */
-const PageHeader = window.Header;
+const PageHeader      = window.Header;
 const PageStatusBadge = window.StatusBadge;
 
 function AudioPlayer({ src }) {
-  const audioRef     = React.useRef(null);
-  const seekRef      = React.useRef(null);
+  const audioRef  = React.useRef(null);
+  const seekRef   = React.useRef(null);
   const [playing, setPlaying]   = React.useState(false);
   const [speed, setSpeed]       = React.useState(1);
   const [current, setCurrent]   = React.useState(0);
@@ -46,10 +46,13 @@ function AudioPlayer({ src }) {
 
   const progress = duration ? (current / duration) * 100 : 0;
 
-  const mono = { fontFamily: 'var(--font-mono)', fontSize: '10px', letterSpacing: '1px' };
-
   return (
-    <div style={{ padding: '16px', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '4px', marginBottom: '24px' }}>
+    <div style={{
+      background: 'var(--surface-2)',
+      borderRadius: '12px',
+      padding: '20px 24px',
+      marginBottom: '32px',
+    }}>
       <audio
         ref={audioRef}
         src={src}
@@ -59,20 +62,27 @@ function AudioPlayer({ src }) {
       />
 
       {/* Play + time */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '10px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
         <button
           onClick={togglePlay}
           style={{
-            width: '36px', height: '36px', flexShrink: 0,
-            background: 'var(--surface-2)', border: '1px solid var(--border)',
-            borderRadius: '4px', cursor: 'pointer',
-            color: 'var(--accent)', fontSize: '12px',
+            width: '48px', height: '48px', flexShrink: 0,
+            background: 'var(--accent)',
+            border: 'none',
+            borderRadius: '50%',
+            cursor: 'pointer',
+            color: '#000',
+            fontSize: '16px',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
+            boxShadow: '0 4px 16px rgba(29,185,84,0.4)',
+            transition: 'transform 0.1s, background 0.1s',
           }}
+          onMouseEnter={e => e.currentTarget.style.background = 'var(--accent-hover)'}
+          onMouseLeave={e => e.currentTarget.style.background = 'var(--accent)'}
         >
           {playing ? '⏸' : '▶'}
         </button>
-        <span style={{ ...mono, color: 'var(--text-muted)', flexShrink: 0 }}>
+        <span style={{ color: 'var(--text-muted)', fontSize: '13px', fontFamily: 'var(--font-mono)', flexShrink: 0 }}>
           {fmt(current)} / {fmt(duration)}
         </span>
       </div>
@@ -82,57 +92,70 @@ function AudioPlayer({ src }) {
         ref={seekRef}
         onClick={handleSeek}
         style={{
-          height: '4px', background: 'var(--border)', borderRadius: '2px',
-          cursor: 'pointer', marginBottom: '12px', position: 'relative',
+          height: '4px',
+          background: 'var(--surface-3)',
+          borderRadius: '2px',
+          cursor: 'pointer',
+          marginBottom: '20px',
+          position: 'relative',
         }}
+        onMouseEnter={e => { e.currentTarget.style.height = '6px'; }}
+        onMouseLeave={e => { e.currentTarget.style.height = '4px'; }}
       >
         <div style={{
           height: '100%', width: `${progress}%`,
           background: 'var(--accent)', borderRadius: '2px',
-          pointerEvents: 'none',
+          pointerEvents: 'none', transition: 'width 0.1s',
         }} />
       </div>
 
-      {/* Speed */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>
-        <span style={{ ...mono, color: 'var(--text-muted)' }}>SPEED</span>
-        {window.SPEEDS.map(s => (
-          <button
-            key={s}
-            onClick={() => setPlaybackSpeed(s)}
-            style={{
-              background: speed === s ? 'var(--accent)' : 'transparent',
-              border: '1px solid ' + (speed === s ? 'var(--accent)' : 'var(--border)'),
-              color: speed === s ? 'var(--bg)' : 'var(--text-muted)',
-              ...mono, padding: '3px 6px', borderRadius: '2px', cursor: 'pointer',
-            }}
-          >
-            {s}×
-          </button>
-        ))}
-      </div>
+      {/* Speed + Volume row */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap' }}>
+        {/* Speed */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <span style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: 600, flexShrink: 0 }}>
+            Speed
+          </span>
+          {window.SPEEDS.map(s => (
+            <button
+              key={s}
+              onClick={() => setPlaybackSpeed(s)}
+              style={{
+                background: speed === s ? 'var(--accent)' : 'transparent',
+                border: '1px solid ' + (speed === s ? 'var(--accent)' : 'var(--surface-3)'),
+                color: speed === s ? '#000' : 'var(--text-muted)',
+                fontFamily: 'var(--font-mono)',
+                fontSize: '10px',
+                padding: '3px 7px',
+                borderRadius: '4px',
+                cursor: 'pointer',
+              }}
+            >
+              {s}×
+            </button>
+          ))}
+        </div>
 
-      {/* Volume */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <span style={{ ...mono, color: 'var(--text-muted)', flexShrink: 0 }}>VOL</span>
-        <input
-          type="range"
-          min="0"
-          max="1"
-          step="0.01"
-          value={volume}
-          onChange={handleVolume}
-          style={{ flex: 1, accentColor: 'var(--accent)', cursor: 'pointer' }}
-        />
-        <span style={{ ...mono, color: 'var(--text-muted)', width: '30px', textAlign: 'right' }}>
-          {Math.round(volume * 100)}
-        </span>
+        {/* Volume */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, minWidth: '160px' }}>
+          <span style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: 600, flexShrink: 0 }}>
+            Vol
+          </span>
+          <input
+            type="range" min="0" max="1" step="0.01"
+            value={volume} onChange={handleVolume}
+            style={{ flex: 1, accentColor: 'var(--accent)', cursor: 'pointer' }}
+          />
+          <span style={{ color: 'var(--text-muted)', fontSize: '11px', fontFamily: 'var(--font-mono)', width: '28px', textAlign: 'right' }}>
+            {Math.round(volume * 100)}
+          </span>
+        </div>
       </div>
     </div>
   );
 }
 
-function ShareableLink({ url, fieldLabel }) {
+function ShareableLink({ url }) {
   const [copied, setCopied] = React.useState(false);
 
   function handleCopy() {
@@ -142,22 +165,17 @@ function ShareableLink({ url, fieldLabel }) {
     });
   }
 
-  const mono = { fontFamily: 'var(--font-mono)', fontSize: '10px', letterSpacing: '1px' };
-
   return (
-    <div style={{ marginBottom: '24px' }}>
-      <div style={fieldLabel}>Shareable Link</div>
+    <div style={{ marginBottom: '28px' }}>
+      <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '8px' }}>
+        Shareable Link
+      </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
         <a
           href={url}
           target="_blank"
           rel="noopener noreferrer"
-          style={{
-            color: 'var(--accent)',
-            fontFamily: 'var(--font-mono)',
-            fontSize: '12px',
-            wordBreak: 'break-all',
-          }}
+          style={{ color: 'var(--accent)', fontSize: '13px', wordBreak: 'break-all' }}
         >
           {url}
         </a>
@@ -165,17 +183,18 @@ function ShareableLink({ url, fieldLabel }) {
           onClick={handleCopy}
           style={{
             flexShrink: 0,
-            background: copied ? 'var(--accent)' : 'transparent',
-            border: '1px solid ' + (copied ? 'var(--accent)' : 'var(--border)'),
-            color: copied ? 'var(--bg)' : 'var(--text-muted)',
-            ...mono,
-            padding: '4px 10px',
-            borderRadius: '2px',
+            background: copied ? 'var(--accent)' : 'var(--surface-2)',
+            border: 'none',
+            color: copied ? '#000' : 'var(--text-muted)',
+            fontSize: '12px',
+            fontWeight: 600,
+            padding: '6px 14px',
+            borderRadius: '50px',
             cursor: 'pointer',
-            letterSpacing: '2px',
+            transition: 'background 0.15s',
           }}
         >
-          {copied ? 'COPIED' : 'COPY'}
+          {copied ? '✓ Copied' : 'Copy'}
         </button>
       </div>
     </div>
@@ -203,9 +222,7 @@ function SongDetail() {
     }
   }
 
-  React.useEffect(() => {
-    fetchSong();
-  }, []);
+  React.useEffect(() => { fetchSong(); }, []);
 
   /* Auto-refresh every 5s while song is pending or generating */
   React.useEffect(() => {
@@ -229,123 +246,131 @@ function SongDetail() {
   }
 
   const wrapMain = content => (
-    <div>
+    <div style={{ display: 'flex', minHeight: '100vh' }}>
       <PageHeader />
-      <main style={{ maxWidth: '700px', margin: '0 auto', padding: '40px 24px' }}>
-        <a href="/" style={{
-          display: 'inline-block',
-          marginBottom: '24px',
-          color: 'var(--text-muted)',
-          fontFamily: 'var(--font-mono)',
-          fontSize: '11px',
-          letterSpacing: '1px',
-          textDecoration: 'none',
-        }}>
-          ← BACK
-        </a>
-        {content}
+      <main style={{ flex: 1, padding: '40px 48px', overflowY: 'auto' }}>
+        <div style={{ maxWidth: '1100px', width: '100%' }}>
+          <a href="/" style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '6px',
+            color: 'var(--text-muted)',
+            fontSize: '13px',
+            fontWeight: 500,
+            textDecoration: 'none',
+            marginBottom: '32px',
+          }}>
+            ← Back
+          </a>
+          {content}
+        </div>
       </main>
     </div>
   );
 
   if (loading) return wrapMain(
-    <p style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', fontSize: '12px', letterSpacing: '2px' }}>
-      LOADING...
-    </p>
+    <p style={{ color: 'var(--text-muted)', fontSize: '14px' }}>Loading…</p>
   );
 
   if (error) return wrapMain(
-    <p style={{ color: 'var(--error)', fontFamily: 'var(--font-mono)', fontSize: '12px' }}>
-      ERROR: {error}
-    </p>
+    <p style={{ color: 'var(--error)', fontSize: '14px' }}>Error: {error}</p>
   );
 
   const fieldLabel = {
-    fontFamily: 'var(--font-mono)',
-    fontSize: '10px',
-    letterSpacing: '2px',
+    fontSize: '11px',
+    fontWeight: 600,
     color: 'var(--text-muted)',
     textTransform: 'uppercase',
+    letterSpacing: '0.8px',
     marginBottom: '4px',
   };
-  const fieldValue = {
-    color: 'var(--text)',
-    fontSize: '14px',
-  };
+  const fieldValue = { color: 'var(--text)', fontSize: '15px' };
 
   return wrapMain(
     <React.Fragment>
-      {/* Title + status row */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '32px', gap: '16px' }}>
-        <h1 style={{ fontSize: '28px', fontWeight: 900, lineHeight: 1.1, flex: 1 }}>{song.title}</h1>
+      {/* Title + status */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px', gap: '16px' }}>
+        <h1 style={{ fontSize: '36px', fontWeight: 900, lineHeight: 1.1, letterSpacing: '-0.5px', flex: 1 }}>
+          {song.title}
+        </h1>
         <PageStatusBadge status={song.status} />
       </div>
+      <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginBottom: '40px' }}>
+        {song.genre} · {song.mood} · {song.ocasion}
+      </p>
 
-      {/* Fields grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px 40px', marginBottom: '24px' }}>
-        <div>
-          <div style={fieldLabel}>Genre</div>
-          <div style={fieldValue}>{song.genre}</div>
-        </div>
-        <div>
-          <div style={fieldLabel}>Mood</div>
-          <div style={fieldValue}>{song.mood}</div>
-        </div>
-        <div>
-          <div style={fieldLabel}>Occasion</div>
-          <div style={fieldValue}>{song.ocasion}</div>
-        </div>
-        <div>
-          <div style={fieldLabel}>Singer Voice</div>
-          <div style={fieldValue}>{song.singer_voice}</div>
+      {/* Main content — flex wrap: audio|meta side-by-side on wide, stacks on narrow */}
+      <div style={{ display: 'flex', gap: '40px', flexWrap: 'wrap', marginBottom: '28px', alignItems: 'start' }}>
+
+        {/* Audio col: only when audio exists */}
+        {song.audio_file && (
+          <div style={{ flex: '1 1 320px', minWidth: 0 }}>
+            <AudioPlayer src={song.audio_file} />
+            <div style={{ marginBottom: '20px' }}>
+              <div style={fieldLabel}>Download</div>
+              <a
+                href={song.audio_file}
+                download
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  background: 'var(--surface-2)',
+                  color: 'var(--text)',
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  padding: '10px 20px',
+                  borderRadius: '50px',
+                  textDecoration: 'none',
+                  transition: 'background 0.15s',
+                }}
+                onMouseEnter={e => e.currentTarget.style.background = 'var(--surface-3)'}
+                onMouseLeave={e => e.currentTarget.style.background = 'var(--surface-2)'}
+              >
+                ↓ Download audio
+              </a>
+            </div>
+            {song.shareable_link && <ShareableLink url={song.shareable_link} />}
+          </div>
+        )}
+
+        {/* Metadata col */}
+        <div style={{ flex: '1 1 260px', minWidth: 0 }}>
+          {/* 4 fields — flex wrap: 2-col on wide, stacks on very narrow */}
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px 32px', marginBottom: '24px' }}>
+            <div style={{ flex: '1 1 110px', minWidth: 0 }}>
+              <div style={fieldLabel}>Genre</div>
+              <div style={fieldValue}>{song.genre}</div>
+            </div>
+            <div style={{ flex: '1 1 110px', minWidth: 0 }}>
+              <div style={fieldLabel}>Mood</div>
+              <div style={fieldValue}>{song.mood}</div>
+            </div>
+            <div style={{ flex: '1 1 110px', minWidth: 0 }}>
+              <div style={fieldLabel}>Occasion</div>
+              <div style={fieldValue}>{song.ocasion}</div>
+            </div>
+            <div style={{ flex: '1 1 110px', minWidth: 0 }}>
+              <div style={fieldLabel}>Singer Voice</div>
+              <div style={fieldValue}>{song.singer_voice}</div>
+            </div>
+          </div>
+
+          {song.prompt && (
+            <div style={{ marginBottom: '20px' }}>
+              <div style={fieldLabel}>Prompt</div>
+              <div style={{ color: 'var(--text-muted)', fontSize: '14px', lineHeight: 1.7 }}>
+                {song.prompt}
+              </div>
+            </div>
+          )}
+
+          {!song.audio_file && song.shareable_link && <ShareableLink url={song.shareable_link} />}
         </div>
       </div>
 
-      {song.prompt && (
-        <div style={{ marginBottom: '24px' }}>
-          <div style={fieldLabel}>Prompt</div>
-          <div style={{ ...fieldValue, color: 'var(--text-muted)', lineHeight: 1.6, fontSize: '13px' }}>
-            {song.prompt}
-          </div>
-        </div>
-      )}
-
-      {/* Audio player */}
-      {song.audio_file && <AudioPlayer src={song.audio_file} />}
-
-      {/* Download */}
-      {song.audio_file && (
-        <div style={{ marginBottom: '24px' }}>
-          <div style={fieldLabel}>Download</div>
-          <a
-            href={song.audio_file}
-            download
-            style={{
-              display: 'inline-block',
-              background: 'transparent',
-              border: '1px solid var(--accent)',
-              color: 'var(--accent)',
-              fontFamily: 'var(--font-mono)',
-              fontSize: '11px',
-              letterSpacing: '2px',
-              textTransform: 'uppercase',
-              padding: '8px 16px',
-              borderRadius: '2px',
-              textDecoration: 'none',
-            }}
-          >
-            ↓ DOWNLOAD
-          </a>
-        </div>
-      )}
-
-      {/* Shareable link */}
-      {song.shareable_link && (
-        <ShareableLink url={song.shareable_link} fieldLabel={fieldLabel} />
-      )}
-
       {/* Delete */}
-      <div style={{ marginTop: '40px', paddingTop: '24px', borderTop: '1px solid var(--border)' }}>
+      <div style={{ marginTop: '48px', paddingTop: '24px', borderTop: '1px solid var(--surface-2)' }}>
         <button
           onClick={handleDelete}
           disabled={deleting}
@@ -353,16 +378,16 @@ function SongDetail() {
             background: 'transparent',
             border: '1px solid var(--error)',
             color: 'var(--error)',
-            fontFamily: 'var(--font-mono)',
-            fontSize: '11px',
-            letterSpacing: '2px',
-            textTransform: 'uppercase',
-            padding: '8px 16px',
+            fontSize: '13px',
+            fontWeight: 600,
+            padding: '10px 20px',
             cursor: deleting ? 'not-allowed' : 'pointer',
-            borderRadius: '2px',
+            borderRadius: '50px',
+            opacity: deleting ? 0.6 : 1,
+            transition: 'opacity 0.15s',
           }}
         >
-          {deleting ? 'DELETING...' : 'DELETE SONG'}
+          {deleting ? 'Deleting…' : 'Delete Song'}
         </button>
       </div>
     </React.Fragment>

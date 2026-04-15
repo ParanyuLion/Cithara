@@ -1,10 +1,8 @@
-/* Shared React components — exported to window.* for cross-script access.
-   Use function declarations (not const/let) so component names are uppercase
-   and valid as JSX tags within this file. Assign to window.* at the bottom
-   so separate type="text/babel" page scripts can import them. */
+/* Shared React components — exported to window.* for cross-script access. */
 
-function Header({ rightSlot }) {
+function Header() {
   const currentUser = window.CURRENT_USER;
+  const path = window.location.pathname;
 
   function handleSignOut() {
     const form = document.createElement('form');
@@ -19,146 +17,240 @@ function Header({ rightSlot }) {
     form.submit();
   }
 
+  const navItems = [
+    { label: 'My Library', href: '/',     icon: '◉' },
+    { label: 'New Song',   href: '/new/', icon: '+' },
+  ];
+
   return (
-    <header style={{
-      background: 'var(--surface)',
-      borderBottom: '1px solid var(--border)',
-      padding: '0 24px',
-      height: '56px',
+    <aside style={{
+      width: '220px',
+      background: '#000',
       display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
+      flexDirection: 'column',
       position: 'sticky',
       top: 0,
-      zIndex: 100,
+      height: '100vh',
+      flexShrink: 0,
+      overflowY: 'auto',
     }}>
-      <a href="/" style={{ textDecoration: 'none' }}>
-        <span style={{
-          fontFamily: 'var(--font-mono)',
-          color: 'var(--accent)',
-          fontSize: '13px',
-          letterSpacing: '4px',
-          fontWeight: 700,
-        }}>◆ CITHARA</span>
-      </a>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-        {rightSlot && <div>{rightSlot}</div>}
-        <span style={{
+      {/* Logo */}
+      <div style={{ padding: '28px 20px 24px' }}>
+        <a href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <span style={{ fontSize: '26px', lineHeight: 1 }}>♪</span>
+          <span style={{ color: 'var(--text)', fontSize: '19px', fontWeight: 900, letterSpacing: '-0.5px' }}>
+            Cithara
+          </span>
+        </a>
+      </div>
+
+      {/* Nav */}
+      <nav style={{ padding: '0 8px', flex: 1 }}>
+        {navItems.map(item => {
+          const active = path === item.href;
+          return (
+            <a
+              key={item.href}
+              href={item.href}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '14px',
+                padding: '11px 14px',
+                borderRadius: '6px',
+                color: active ? 'var(--text)' : 'var(--text-muted)',
+                fontWeight: active ? 700 : 500,
+                textDecoration: 'none',
+                fontSize: '14px',
+                background: active ? 'var(--surface-2)' : 'transparent',
+                marginBottom: '2px',
+              }}
+            >
+              <span style={{ fontSize: '15px', color: active ? 'var(--accent)' : 'inherit' }}>
+                {item.icon}
+              </span>
+              {item.label}
+            </a>
+          );
+        })}
+      </nav>
+
+      {/* User + sign out */}
+      <div style={{ padding: '16px', borderTop: '1px solid var(--surface-2)' }}>
+        <div style={{
           color: 'var(--text-muted)',
-          fontFamily: 'var(--font-mono)',
-          fontSize: '10px',
-          letterSpacing: '1px',
-        }}>{currentUser}</span>
+          fontSize: '12px',
+          marginBottom: '10px',
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+        }}>
+          {currentUser}
+        </div>
         <button
           onClick={handleSignOut}
           style={{
+            width: '100%',
             background: 'transparent',
-            border: '1px solid var(--border)',
+            border: '1px solid var(--surface-3)',
             color: 'var(--text-muted)',
-            fontFamily: 'var(--font-mono)',
-            fontSize: '10px',
-            letterSpacing: '2px',
-            textTransform: 'uppercase',
-            padding: '4px 10px',
+            fontSize: '13px',
+            fontWeight: 600,
+            padding: '8px',
+            borderRadius: '8px',
             cursor: 'pointer',
-            borderRadius: '2px',
           }}
         >
-          SIGN OUT
+          Sign Out
         </button>
       </div>
-    </header>
+    </aside>
   );
 }
 
 function StatusBadge({ status }) {
-  const colorMap = {
-    Completed:  'var(--accent)',
-    Generating: 'var(--warn)',
-    Pending:    'var(--warn)',
-    Failed:     'var(--error)',
+  const styles = {
+    Completed:  { bg: 'rgba(29,185,84,0.15)',   color: 'var(--accent)', dot: '●' },
+    Generating: { bg: 'rgba(255,164,43,0.15)',  color: 'var(--warn)',   dot: '◌' },
+    Pending:    { bg: 'rgba(255,164,43,0.15)',  color: 'var(--warn)',   dot: '○' },
+    Failed:     { bg: 'rgba(241,94,108,0.15)',  color: 'var(--error)',  dot: '✕' },
   };
-  const color = colorMap[status] || 'var(--text-muted)';
-  const prefix = status === 'Completed' ? '● ' : status === 'Generating' ? '◌ ' : '';
+  const s = styles[status] || { bg: 'var(--surface-2)', color: 'var(--text-muted)', dot: '·' };
 
   return (
     <span style={{
-      fontFamily: 'var(--font-mono)',
-      fontSize: '10px',
-      letterSpacing: '1px',
-      color,
-      textTransform: 'uppercase',
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: '5px',
+      background: s.bg,
+      color: s.color,
+      fontSize: '11px',
+      fontWeight: 600,
+      padding: '3px 10px',
+      borderRadius: '50px',
       whiteSpace: 'nowrap',
     }}>
-      {prefix}{status}
+      <span style={{ fontSize: '8px' }}>{s.dot}</span>
+      {status}
     </span>
   );
 }
 
 const SPEEDS = [0.5, 0.75, 1, 1.25, 1.5, 2];
 
-function SongRow({ song, onClick }) {
+function SongRow({ song, onClick, index }) {
   const audioRef = React.useRef(null);
   const [playing, setPlaying] = React.useState(false);
-  const [speed, setSpeed] = React.useState(1);
+  const [speed, setSpeed]     = React.useState(1);
+  const [hovered, setHovered] = React.useState(false);
 
-  const borderColor = {
-    Completed:  'var(--accent)',
-    Generating: 'var(--warn)',
-    Pending:    'var(--warn)',
-    Failed:     'var(--error)',
-  }[song.status] || 'var(--border)';
+  const thumbGradients = {
+    Completed:  'linear-gradient(135deg,#1DB954 0%,#0d7a3a 100%)',
+    Generating: 'linear-gradient(135deg,#ffa42b 0%,#b56a00 100%)',
+    Pending:    'linear-gradient(135deg,#535353 0%,#282828 100%)',
+    Failed:     'linear-gradient(135deg,#f15e6c 0%,#7a1a23 100%)',
+  };
+  const thumbGrad = thumbGradients[song.status] || thumbGradients.Pending;
 
   function handlePlay(e) {
     e.stopPropagation();
     if (!song.audio_file || !audioRef.current) return;
-    if (audioRef.current.paused) {
-      audioRef.current.play();
-      setPlaying(true);
-    } else {
-      audioRef.current.pause();
-      setPlaying(false);
-    }
+    if (audioRef.current.paused) { audioRef.current.play(); setPlaying(true); }
+    else                         { audioRef.current.pause(); setPlaying(false); }
   }
 
   return (
     <div
       onClick={onClick}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
       style={{
-        background: 'var(--surface)',
-        border: '1px solid var(--border)',
-        borderLeft: `2px solid ${borderColor}`,
-        padding: '12px 16px',
-        borderRadius: '4px',
-        display: 'flex',
+        display: 'grid',
+        gridTemplateColumns: '32px 52px 1fr auto auto',
         alignItems: 'center',
         gap: '14px',
+        padding: '8px 12px',
+        borderRadius: '6px',
+        background: hovered ? 'var(--surface-2)' : 'transparent',
         cursor: 'pointer',
-        transition: 'background 0.1s',
+        transition: 'background 0.12s',
+        userSelect: 'none',
       }}
-      onMouseEnter={e => e.currentTarget.style.background = 'var(--surface-2)'}
-      onMouseLeave={e => e.currentTarget.style.background = 'var(--surface)'}
     >
-      <button
-        onClick={handlePlay}
-        disabled={!song.audio_file}
-        style={{
-          width: '36px',
-          height: '36px',
-          background: 'var(--surface-2)',
-          border: '1px solid var(--border)',
-          borderRadius: '4px',
-          cursor: song.audio_file ? 'pointer' : 'not-allowed',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          flexShrink: 0,
-          color: song.audio_file ? 'var(--accent)' : 'var(--text-muted)',
-          fontSize: '11px',
-        }}
-      >
-        {playing ? '⏸' : '▶'}
-      </button>
+      {/* Index / play */}
+      <div style={{ display: 'flex', justifyContent: 'center' }}>
+        {(hovered || playing) && song.audio_file ? (
+          <button
+            onClick={handlePlay}
+            style={{
+              background: 'none', border: 'none', cursor: 'pointer',
+              color: playing ? 'var(--accent)' : 'var(--text)',
+              fontSize: '14px', padding: 0, lineHeight: 1,
+            }}
+          >
+            {playing ? '⏸' : '▶'}
+          </button>
+        ) : (
+          <span style={{ color: playing ? 'var(--accent)' : 'var(--text-muted)', fontSize: '13px', fontWeight: 500 }}>
+            {playing ? '▶' : (index !== undefined ? index + 1 : '')}
+          </span>
+        )}
+      </div>
+
+      {/* Thumbnail */}
+      <div style={{
+        width: '52px', height: '52px', borderRadius: '6px',
+        background: thumbGrad, flexShrink: 0,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        fontSize: '20px', color: 'rgba(255,255,255,0.8)',
+        boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
+      }}>
+        ♪
+      </div>
+
+      {/* Info */}
+      <div style={{ minWidth: 0 }}>
+        <div style={{
+          color: playing ? 'var(--accent)' : 'var(--text)',
+          fontSize: '15px', fontWeight: 600,
+          whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+          marginBottom: '3px',
+        }}>
+          {song.title}
+        </div>
+        <div style={{
+          color: 'var(--text-muted)', fontSize: '13px',
+          whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+        }}>
+          {song.genre} · {song.mood} · {song.ocasion}
+        </div>
+      </div>
+
+      {/* Speed */}
+      {song.audio_file ? (
+        <div onClick={e => e.stopPropagation()} style={{ display: 'flex', gap: '3px', flexShrink: 0 }}>
+          {SPEEDS.map(s => (
+            <button
+              key={s}
+              onClick={() => { setSpeed(s); if (audioRef.current) audioRef.current.playbackRate = s; }}
+              style={{
+                background: speed === s ? 'var(--accent)' : 'transparent',
+                border: '1px solid ' + (speed === s ? 'var(--accent)' : 'var(--surface-3)'),
+                color: speed === s ? '#000' : 'var(--text-muted)',
+                fontFamily: 'var(--font-mono)',
+                fontSize: '9px', padding: '2px 5px',
+                borderRadius: '3px', cursor: 'pointer',
+              }}
+            >
+              {s}×
+            </button>
+          ))}
+        </div>
+      ) : <div />}
+
+      {/* Status */}
+      <StatusBadge status={song.status} />
+
       {song.audio_file && (
         <audio
           ref={audioRef}
@@ -167,60 +259,11 @@ function SongRow({ song, onClick }) {
           style={{ display: 'none' }}
         />
       )}
-
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{
-          color: 'var(--text)',
-          fontSize: '14px',
-          fontWeight: 700,
-        }}>
-          {song.title}
-        </div>
-        <div style={{
-          color: 'var(--text-muted)',
-          fontSize: '11px',
-          fontFamily: 'var(--font-mono)',
-          marginTop: '3px',
-          letterSpacing: '0.5px',
-        }}>
-          {song.genre} · {song.mood} · {song.ocasion}
-        </div>
-      </div>
-
-      {song.audio_file && (
-        <div onClick={e => e.stopPropagation()} style={{ display: 'flex', gap: '4px', flexShrink: 0 }}>
-          {SPEEDS.map(s => (
-            <button
-              key={s}
-              onClick={() => {
-                setSpeed(s);
-                if (audioRef.current) audioRef.current.playbackRate = s;
-              }}
-              style={{
-                background: speed === s ? 'var(--accent)' : 'transparent',
-                border: '1px solid ' + (speed === s ? 'var(--accent)' : 'var(--border)'),
-                color: speed === s ? 'var(--bg)' : 'var(--text-muted)',
-                fontFamily: 'var(--font-mono)',
-                fontSize: '9px',
-                padding: '3px 5px',
-                borderRadius: '2px',
-                cursor: 'pointer',
-                letterSpacing: '0.5px',
-              }}
-            >
-              {s}×
-            </button>
-          ))}
-        </div>
-      )}
-
-      <StatusBadge status={song.status} />
     </div>
   );
 }
 
-/* Export to window so page scripts (separate type="text/babel" tags) can access them.
-   const/let are script-scoped across Babel tags; window.* is the shared channel. */
+/* Export to window so page scripts can access them. */
 window.Header      = Header;
 window.StatusBadge = StatusBadge;
 window.SongRow     = SongRow;

@@ -7,22 +7,24 @@
   <title>{% block title %}Cithara{% endblock %}</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <style>
     :root {
-      --bg:          #0d0d0d;
-      --surface:     #111111;
-      --surface-2:   #141414;
-      --border:      #1e1e1e;
-      --accent:      #00ff88;
-      --accent-dim:  rgba(0, 255, 136, 0.15);
-      --text:        #ffffff;
-      --text-muted:  #555555;
-      --warn:        #ffaa00;
-      --error:       #ff4444;
+      --bg:          #121212;
+      --surface:     #181818;
+      --surface-2:   #282828;
+      --surface-3:   #3e3e3e;
+      --accent:      #1DB954;
+      --accent-dim:  rgba(29, 185, 84, 0.15);
+      --accent-hover:#1ed760;
+      --text:        #FFFFFF;
+      --text-muted:  #b3b3b3;
+      --text-subdued:#6a6a6a;
+      --warn:        #ffa42b;
+      --error:       #f15e6c;
       --font-mono:   'Courier New', Courier, monospace;
       --font-sans:   'Inter', system-ui, sans-serif;
     }
@@ -35,6 +37,10 @@
     }
     #root { min-height: 100vh; }
     select option { background: var(--surface-2); color: var(--text); }
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--surface-3); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #535353; }
   </style>
   {% block head %}{% endblock %}
   <script>

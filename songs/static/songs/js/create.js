@@ -5,23 +5,22 @@ const GENRES = ['Pop', 'Rock', 'Jazz', 'Hip-Hop', 'Country'];
 
 const inputStyle = {
   background: 'var(--surface-2)',
-  border: '1px solid var(--border)',
+  border: '1px solid transparent',
   color: 'var(--text)',
   fontFamily: 'var(--font-sans)',
   fontSize: '14px',
-  padding: '10px 12px',
+  padding: '12px 14px',
   width: '100%',
   outline: 'none',
-  borderRadius: '2px',
+  borderRadius: '8px',
+  transition: 'border-color 0.15s',
 };
 
 const labelStyle = {
   display: 'block',
-  fontFamily: 'var(--font-mono)',
-  fontSize: '10px',
-  letterSpacing: '2px',
+  fontSize: '13px',
+  fontWeight: 600,
   color: 'var(--text-muted)',
-  textTransform: 'uppercase',
   marginBottom: '6px',
 };
 
@@ -46,7 +45,7 @@ function CreateSong() {
   }
 
   function focusGreen(e)  { e.target.style.borderColor = 'var(--accent)'; }
-  function blurRestore(e) { e.target.style.borderColor = 'var(--border)'; }
+  function blurRestore(e) { e.target.style.borderColor = 'transparent'; }
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -81,119 +80,129 @@ function CreateSong() {
     }
   }
 
-  const backLink = (
-    <a href="/" style={{
-      color: 'var(--text-muted)',
-      fontFamily: 'var(--font-mono)',
-      fontSize: '11px',
-      letterSpacing: '1px',
-      textDecoration: 'none',
-    }}>
-      ← BACK
-    </a>
-  );
-
   return (
-    <div>
-      <PageHeader rightSlot={backLink} />
-      <main style={{ maxWidth: '560px', margin: '0 auto', padding: '40px 24px' }}>
-        <h1 style={{
-          fontFamily: 'var(--font-mono)',
-          fontSize: '13px',
-          letterSpacing: '4px',
-          color: 'var(--accent)',
-          textTransform: 'uppercase',
-          marginBottom: '32px',
-        }}>
-          NEW SONG
-        </h1>
+    <div style={{ display: 'flex', minHeight: '100vh' }}>
+      <PageHeader />
 
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      <main style={{ flex: 1, padding: '40px 48px', overflowY: 'auto' }}>
+        <div style={{ maxWidth: '960px', width: '100%' }}>
 
-          <Field label="Title *">
-            <input
-              name="title" value={form.title} onChange={handleChange} required
-              style={inputStyle} onFocus={focusGreen} onBlur={blurRestore}
-            />
-          </Field>
+          {/* Back link */}
+          <a href="/" style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '6px',
+            color: 'var(--text-muted)',
+            fontSize: '13px',
+            fontWeight: 500,
+            textDecoration: 'none',
+            marginBottom: '32px',
+          }}>
+            ← Back
+          </a>
 
-          <Field label="Genre *">
-            <select
-              name="genre" value={form.genre} onChange={handleChange} required
-              style={{ ...inputStyle, cursor: 'pointer' }} onFocus={focusGreen} onBlur={blurRestore}
-            >
-              <option value="">Select genre</option>
-              {GENRES.map(g => <option key={g} value={g}>{g}</option>)}
-            </select>
-          </Field>
+          <h1 style={{ fontSize: '32px', fontWeight: 900, letterSpacing: '-0.5px', marginBottom: '8px' }}>
+            New Song
+          </h1>
+          <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginBottom: '40px' }}>
+            Fill in the details and let AI compose your song.
+          </p>
 
-          <Field label="Mood *">
-            <input
-              name="mood" value={form.mood} onChange={handleChange} required
-              style={inputStyle} onFocus={focusGreen} onBlur={blurRestore}
-              placeholder="e.g. happy, melancholic, energetic"
-            />
-          </Field>
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
 
-          <Field label="Occasion *">
-            <input
-              name="ocasion" value={form.ocasion} onChange={handleChange} required
-              style={inputStyle} onFocus={focusGreen} onBlur={blurRestore}
-              placeholder="e.g. birthday, wedding, road trip"
-            />
-          </Field>
+            <Field label="Title *">
+              <input
+                name="title" value={form.title} onChange={handleChange} required
+                style={inputStyle} onFocus={focusGreen} onBlur={blurRestore}
+                placeholder="My Song"
+              />
+            </Field>
 
-          <Field label="Singer Voice *">
-            <input
-              name="singer_voice" value={form.singer_voice} onChange={handleChange} required
-              style={inputStyle} onFocus={focusGreen} onBlur={blurRestore}
-              placeholder="e.g. female, male, deep baritone"
-            />
-          </Field>
+            {/* Genre + Mood — flex wrap: 2-col on wide, stacks on narrow */}
+            <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
+              <div style={{ flex: '1 1 200px', minWidth: 0 }}>
+                <Field label="Genre *">
+                  <select
+                    name="genre" value={form.genre} onChange={handleChange} required
+                    style={{ ...inputStyle, cursor: 'pointer' }} onFocus={focusGreen} onBlur={blurRestore}
+                  >
+                    <option value="">Select genre</option>
+                    {GENRES.map(g => <option key={g} value={g}>{g}</option>)}
+                  </select>
+                </Field>
+              </div>
+              <div style={{ flex: '1 1 200px', minWidth: 0 }}>
+                <Field label="Mood *">
+                  <input
+                    name="mood" value={form.mood} onChange={handleChange} required
+                    style={inputStyle} onFocus={focusGreen} onBlur={blurRestore}
+                    placeholder="e.g. happy, melancholic, energetic"
+                  />
+                </Field>
+              </div>
+            </div>
 
-          <Field label="Prompt (optional)">
-            <textarea
-              name="prompt" value={form.prompt} onChange={handleChange}
-              rows={4}
-              style={{ ...inputStyle, resize: 'vertical', lineHeight: '1.5' }}
-              onFocus={focusGreen} onBlur={blurRestore}
-              placeholder="Additional instructions for the AI…"
-            />
-          </Field>
+            {/* Occasion + Singer Voice — flex wrap */}
+            <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
+              <div style={{ flex: '1 1 200px', minWidth: 0 }}>
+                <Field label="Occasion *">
+                  <input
+                    name="ocasion" value={form.ocasion} onChange={handleChange} required
+                    style={inputStyle} onFocus={focusGreen} onBlur={blurRestore}
+                    placeholder="e.g. birthday, wedding, road trip"
+                  />
+                </Field>
+              </div>
+              <div style={{ flex: '1 1 200px', minWidth: 0 }}>
+                <Field label="Singer Voice *">
+                  <input
+                    name="singer_voice" value={form.singer_voice} onChange={handleChange} required
+                    style={inputStyle} onFocus={focusGreen} onBlur={blurRestore}
+                    placeholder="e.g. female, male, deep baritone"
+                  />
+                </Field>
+              </div>
+            </div>
 
-          {error && (
-            <p style={{
-              color: 'var(--error)',
-              fontFamily: 'var(--font-mono)',
-              fontSize: '11px',
-              letterSpacing: '1px',
-            }}>
-              ERROR: {error}
-            </p>
-          )}
+            <Field label="Prompt (optional)">
+              <textarea
+                name="prompt" value={form.prompt} onChange={handleChange}
+                rows={4}
+                style={{ ...inputStyle, resize: 'vertical', lineHeight: '1.6' }}
+                onFocus={focusGreen} onBlur={blurRestore}
+                placeholder="Additional instructions for the AI…"
+              />
+            </Field>
 
-          <button
-            type="submit"
-            disabled={submitting}
-            style={{
-              background: submitting ? 'var(--text-muted)' : 'var(--accent)',
-              color: '#000',
-              border: 'none',
-              padding: '12px 24px',
-              fontFamily: 'var(--font-mono)',
-              fontSize: '11px',
-              fontWeight: 700,
-              letterSpacing: '3px',
-              textTransform: 'uppercase',
-              cursor: submitting ? 'not-allowed' : 'pointer',
-              alignSelf: 'flex-start',
-              borderRadius: '2px',
-            }}
-          >
-            {submitting ? 'CREATING...' : 'CREATE SONG'}
-          </button>
+            {error && (
+              <p style={{ color: 'var(--error)', fontSize: '13px' }}>
+                {error}
+              </p>
+            )}
 
-        </form>
+            <div>
+              <button
+                type="submit"
+                disabled={submitting}
+                style={{
+                  background: submitting ? 'var(--surface-3)' : 'var(--accent)',
+                  color: submitting ? 'var(--text-muted)' : '#000',
+                  border: 'none',
+                  padding: '14px 36px',
+                  fontFamily: 'var(--font-sans)',
+                  fontSize: '15px',
+                  fontWeight: 700,
+                  cursor: submitting ? 'not-allowed' : 'pointer',
+                  borderRadius: '50px',
+                  transition: 'background 0.15s',
+                }}
+              >
+                {submitting ? 'Creating…' : 'Create Song'}
+              </button>
+            </div>
+
+          </form>
+        </div>
       </main>
     </div>
   );
