@@ -285,16 +285,20 @@ function SongDetail() {
       <PageHeader />
       <main style={{ flex: 1, padding: '40px 48px', overflowY: 'auto' }}>
         <div style={{ maxWidth: '1100px', width: '100%' }}>
-          <a href="/" style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '6px',
-            color: 'var(--text-muted)',
-            fontSize: '13px',
-            fontWeight: 500,
-            textDecoration: 'none',
-            marginBottom: '32px',
-          }}>
+          <a href="/"
+            onMouseEnter={e => { e.currentTarget.style.color = 'var(--text)'; }}
+            onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-muted)'; }}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              color: 'var(--text-muted)',
+              fontSize: '13px',
+              fontWeight: 500,
+              textDecoration: 'none',
+              marginBottom: '32px',
+              transition: 'color 0.15s',
+            }}>
             ← Back
           </a>
           {content}

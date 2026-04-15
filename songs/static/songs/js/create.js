@@ -88,16 +88,20 @@ function CreateSong() {
         <div style={{ maxWidth: '960px', width: '100%' }}>
 
           {/* Back link */}
-          <a href="/" style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '6px',
-            color: 'var(--text-muted)',
-            fontSize: '13px',
-            fontWeight: 500,
-            textDecoration: 'none',
-            marginBottom: '32px',
-          }}>
+          <a href="/"
+            onMouseEnter={e => { e.currentTarget.style.color = 'var(--text)'; }}
+            onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-muted)'; }}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              color: 'var(--text-muted)',
+              fontSize: '13px',
+              fontWeight: 500,
+              textDecoration: 'none',
+              marginBottom: '32px',
+              transition: 'color 0.15s',
+            }}>
             ← Back
           </a>
 
