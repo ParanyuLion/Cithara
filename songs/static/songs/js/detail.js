@@ -116,6 +116,8 @@ function AudioPlayer({ src }) {
         <div style={{ position: 'relative' }}>
           <button
             onClick={() => setShowSpeeds(v => !v)}
+            onMouseEnter={e => { e.currentTarget.style.opacity = '0.8'; }}
+            onMouseLeave={e => { e.currentTarget.style.opacity = '1'; }}
             style={{
               background: speed !== 1 ? 'var(--accent)' : 'transparent',
               border: '1px solid ' + (speed !== 1 ? 'var(--accent)' : 'var(--surface-3)'),
@@ -125,6 +127,7 @@ function AudioPlayer({ src }) {
               padding: '3px 10px',
               borderRadius: '4px',
               cursor: 'pointer',
+              transition: 'opacity 0.15s',
             }}
           >
             speed {speed}×
@@ -144,6 +147,8 @@ function AudioPlayer({ src }) {
                 <button
                   key={s}
                   onClick={() => { setPlaybackSpeed(s); setShowSpeeds(false); }}
+                  onMouseEnter={e => { if (speed !== s) e.currentTarget.style.background = 'var(--surface-3)'; }}
+                  onMouseLeave={e => { if (speed !== s) e.currentTarget.style.background = 'transparent'; }}
                   style={{
                     background: speed === s ? 'var(--accent)' : 'transparent',
                     border: '1px solid ' + (speed === s ? 'var(--accent)' : 'transparent'),
@@ -154,6 +159,7 @@ function AudioPlayer({ src }) {
                     borderRadius: '4px',
                     cursor: 'pointer',
                     whiteSpace: 'nowrap',
+                    transition: 'background 0.12s',
                   }}
                 >
                   {s}×
@@ -208,6 +214,8 @@ function ShareableLink({ url }) {
         </a>
         <button
           onClick={handleCopy}
+          onMouseEnter={e => { if (!copied) e.currentTarget.style.background = 'var(--surface-3)'; }}
+          onMouseLeave={e => { if (!copied) e.currentTarget.style.background = 'var(--surface-2)'; }}
           style={{
             flexShrink: 0,
             background: copied ? 'var(--accent)' : 'var(--surface-2)',
@@ -401,6 +409,8 @@ function SongDetail() {
         <button
           onClick={handleDelete}
           disabled={deleting}
+          onMouseEnter={e => { if (!deleting) e.currentTarget.style.background = 'rgba(241,94,108,0.12)'; }}
+          onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
           style={{
             background: 'transparent',
             border: '1px solid var(--error)',
@@ -411,7 +421,7 @@ function SongDetail() {
             cursor: deleting ? 'not-allowed' : 'pointer',
             borderRadius: '50px',
             opacity: deleting ? 0.6 : 1,
-            transition: 'opacity 0.15s',
+            transition: 'background 0.15s, opacity 0.15s',
           }}
         >
           {deleting ? 'Deleting…' : 'Delete Song'}

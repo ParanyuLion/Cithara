@@ -52,6 +52,8 @@ function Header() {
             <a
               key={item.href}
               href={item.href}
+              onMouseEnter={e => { if (!active) e.currentTarget.style.background = 'var(--surface-2)'; }}
+              onMouseLeave={e => { if (!active) e.currentTarget.style.background = 'transparent'; }}
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -64,6 +66,7 @@ function Header() {
                 fontSize: '14px',
                 background: active ? 'var(--surface-2)' : 'transparent',
                 marginBottom: '2px',
+                transition: 'background 0.12s',
               }}
             >
               <span style={{ fontSize: '15px', color: active ? 'var(--accent)' : 'inherit' }}>
@@ -89,6 +92,8 @@ function Header() {
         </div>
         <button
           onClick={handleSignOut}
+          onMouseEnter={e => { e.currentTarget.style.background = 'var(--surface-2)'; e.currentTarget.style.color = 'var(--text)'; }}
+          onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-muted)'; }}
           style={{
             width: '100%',
             background: 'transparent',
@@ -99,6 +104,7 @@ function Header() {
             padding: '8px',
             borderRadius: '8px',
             cursor: 'pointer',
+            transition: 'background 0.15s, color 0.15s',
           }}
         >
           Sign Out
@@ -172,10 +178,15 @@ function SongRow({ song, onClick, index, onPlay, isPlaying, isActive }) {
         {(hovered || isActive) && song.audio_file ? (
           <button
             onClick={e => { e.stopPropagation(); onPlay && onPlay(); }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.12)'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'none'; }}
             style={{
               background: 'none', border: 'none', cursor: 'pointer',
               color: isPlaying ? 'var(--accent)' : 'var(--text)',
-              fontSize: '14px', padding: 0, lineHeight: 1,
+              fontSize: '14px', padding: '8px', lineHeight: 1,
+              margin: '-8px', borderRadius: '50%',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              transition: 'background 0.12s',
             }}
           >
             {isPlaying ? '⏸' : '▶'}

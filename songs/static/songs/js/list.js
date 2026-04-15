@@ -68,6 +68,8 @@ function NowPlayingBar({ song, audioRef, playing, setPlaying, current, duration,
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '12px' }}>
         <button
           onClick={togglePlay}
+          onMouseEnter={e => { e.currentTarget.style.background = 'var(--accent-hover)'; e.currentTarget.style.transform = 'scale(1.06)'; }}
+          onMouseLeave={e => { e.currentTarget.style.background = 'var(--accent)'; e.currentTarget.style.transform = 'scale(1)'; }}
           style={{
             width: '36px', height: '36px', flexShrink: 0,
             background: 'var(--accent)',
@@ -75,6 +77,7 @@ function NowPlayingBar({ song, audioRef, playing, setPlaying, current, duration,
             cursor: 'pointer', color: '#000', fontSize: '13px',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             boxShadow: '0 2px 8px rgba(29,185,84,0.35)',
+            transition: 'background 0.15s, transform 0.1s',
           }}
         >
           {playing ? '⏸' : '▶'}
@@ -102,6 +105,8 @@ function NowPlayingBar({ song, audioRef, playing, setPlaying, current, duration,
         <div style={{ position: 'relative' }}>
           <button
             onClick={() => setShowSpeeds(v => !v)}
+            onMouseEnter={e => { e.currentTarget.style.opacity = '0.8'; }}
+            onMouseLeave={e => { e.currentTarget.style.opacity = '1'; }}
             style={{
               background: speed !== 1 ? 'var(--accent)' : 'transparent',
               border: '1px solid ' + (speed !== 1 ? 'var(--accent)' : 'var(--surface-3)'),
@@ -109,6 +114,7 @@ function NowPlayingBar({ song, audioRef, playing, setPlaying, current, duration,
               fontFamily: 'var(--font-mono)',
               fontSize: '10px', padding: '3px 10px',
               borderRadius: '4px', cursor: 'pointer',
+              transition: 'opacity 0.15s',
             }}
           >
             speed {speed}×
@@ -123,14 +129,18 @@ function NowPlayingBar({ song, audioRef, playing, setPlaying, current, duration,
               zIndex: 20, boxShadow: '0 4px 16px rgba(0,0,0,0.5)',
             }}>
               {window.SPEEDS.map(s => (
-                <button key={s} onClick={() => handleSpeed(s)} style={{
-                  background: speed === s ? 'var(--accent)' : 'transparent',
-                  border: '1px solid ' + (speed === s ? 'var(--accent)' : 'transparent'),
-                  color: speed === s ? '#000' : 'var(--text-muted)',
-                  fontFamily: 'var(--font-mono)',
-                  fontSize: '10px', padding: '3px 7px',
-                  borderRadius: '4px', cursor: 'pointer', whiteSpace: 'nowrap',
-                }}>
+                <button key={s} onClick={() => handleSpeed(s)}
+                  onMouseEnter={e => { if (speed !== s) e.currentTarget.style.background = 'var(--surface-3)'; }}
+                  onMouseLeave={e => { if (speed !== s) e.currentTarget.style.background = 'transparent'; }}
+                  style={{
+                    background: speed === s ? 'var(--accent)' : 'transparent',
+                    border: '1px solid ' + (speed === s ? 'var(--accent)' : 'transparent'),
+                    color: speed === s ? '#000' : 'var(--text-muted)',
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '10px', padding: '3px 7px',
+                    borderRadius: '4px', cursor: 'pointer', whiteSpace: 'nowrap',
+                    transition: 'background 0.12s',
+                  }}>
                   {s}×
                 </button>
               ))}
