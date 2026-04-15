@@ -2,6 +2,136 @@
 const PageHeader = window.Header;
 const PageStatusBadge = window.StatusBadge;
 
+function AudioPlayer({ src }) {
+  const audioRef     = React.useRef(null);
+  const seekRef      = React.useRef(null);
+  const [playing, setPlaying]   = React.useState(false);
+  const [speed, setSpeed]       = React.useState(1);
+  const [current, setCurrent]   = React.useState(0);
+  const [duration, setDuration] = React.useState(0);
+  const [volume, setVolume]     = React.useState(1);
+
+  function fmt(s) {
+    if (!s || isNaN(s)) return '0:00';
+    const m = Math.floor(s / 60);
+    const sec = Math.floor(s % 60);
+    return `${m}:${sec.toString().padStart(2, '0')}`;
+  }
+
+  function togglePlay() {
+    const a = audioRef.current;
+    if (!a) return;
+    if (a.paused) { a.play(); setPlaying(true); }
+    else          { a.pause(); setPlaying(false); }
+  }
+
+  function handleSeek(e) {
+    const a = audioRef.current;
+    if (!a || !duration) return;
+    const rect = seekRef.current.getBoundingClientRect();
+    const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    a.currentTime = ratio * duration;
+  }
+
+  function setPlaybackSpeed(s) {
+    setSpeed(s);
+    if (audioRef.current) audioRef.current.playbackRate = s;
+  }
+
+  function handleVolume(e) {
+    const v = parseFloat(e.target.value);
+    setVolume(v);
+    if (audioRef.current) audioRef.current.volume = v;
+  }
+
+  const progress = duration ? (current / duration) * 100 : 0;
+
+  const mono = { fontFamily: 'var(--font-mono)', fontSize: '10px', letterSpacing: '1px' };
+
+  return (
+    <div style={{ padding: '16px', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '4px', marginBottom: '24px' }}>
+      <audio
+        ref={audioRef}
+        src={src}
+        onTimeUpdate={() => setCurrent(audioRef.current?.currentTime || 0)}
+        onLoadedMetadata={() => setDuration(audioRef.current?.duration || 0)}
+        onEnded={() => setPlaying(false)}
+      />
+
+      {/* Play + time */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '10px' }}>
+        <button
+          onClick={togglePlay}
+          style={{
+            width: '36px', height: '36px', flexShrink: 0,
+            background: 'var(--surface-2)', border: '1px solid var(--border)',
+            borderRadius: '4px', cursor: 'pointer',
+            color: 'var(--accent)', fontSize: '12px',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}
+        >
+          {playing ? '⏸' : '▶'}
+        </button>
+        <span style={{ ...mono, color: 'var(--text-muted)', flexShrink: 0 }}>
+          {fmt(current)} / {fmt(duration)}
+        </span>
+      </div>
+
+      {/* Seek bar */}
+      <div
+        ref={seekRef}
+        onClick={handleSeek}
+        style={{
+          height: '4px', background: 'var(--border)', borderRadius: '2px',
+          cursor: 'pointer', marginBottom: '12px', position: 'relative',
+        }}
+      >
+        <div style={{
+          height: '100%', width: `${progress}%`,
+          background: 'var(--accent)', borderRadius: '2px',
+          pointerEvents: 'none',
+        }} />
+      </div>
+
+      {/* Speed */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>
+        <span style={{ ...mono, color: 'var(--text-muted)' }}>SPEED</span>
+        {window.SPEEDS.map(s => (
+          <button
+            key={s}
+            onClick={() => setPlaybackSpeed(s)}
+            style={{
+              background: speed === s ? 'var(--accent)' : 'transparent',
+              border: '1px solid ' + (speed === s ? 'var(--accent)' : 'var(--border)'),
+              color: speed === s ? 'var(--bg)' : 'var(--text-muted)',
+              ...mono, padding: '3px 6px', borderRadius: '2px', cursor: 'pointer',
+            }}
+          >
+            {s}×
+          </button>
+        ))}
+      </div>
+
+      {/* Volume */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <span style={{ ...mono, color: 'var(--text-muted)', flexShrink: 0 }}>VOL</span>
+        <input
+          type="range"
+          min="0"
+          max="1"
+          step="0.01"
+          value={volume}
+          onChange={handleVolume}
+          style={{ flex: 1, accentColor: 'var(--accent)', cursor: 'pointer' }}
+        />
+        <span style={{ ...mono, color: 'var(--text-muted)', width: '30px', textAlign: 'right' }}>
+          {Math.round(volume * 100)}
+        </span>
+      </div>
+    </div>
+  );
+}
+
 function SongDetail() {
   const songId = window.SONG_ID;
   const [song, setSong]         = React.useState(null);
@@ -132,16 +262,31 @@ function SongDetail() {
       )}
 
       {/* Audio player */}
+      {song.audio_file && <AudioPlayer src={song.audio_file} />}
+
+      {/* Download */}
       {song.audio_file && (
-        <div style={{
-          padding: '16px',
-          background: 'var(--surface)',
-          border: '1px solid var(--border)',
-          borderRadius: '4px',
-          marginBottom: '24px',
-        }}>
-          <div style={{ ...fieldLabel, marginBottom: '10px' }}>Audio</div>
-          <audio controls src={song.audio_file} style={{ width: '100%' }} />
+        <div style={{ marginBottom: '24px' }}>
+          <div style={fieldLabel}>Download</div>
+          <a
+            href={song.audio_file}
+            download
+            style={{
+              display: 'inline-block',
+              background: 'transparent',
+              border: '1px solid var(--accent)',
+              color: 'var(--accent)',
+              fontFamily: 'var(--font-mono)',
+              fontSize: '11px',
+              letterSpacing: '2px',
+              textTransform: 'uppercase',
+              padding: '8px 16px',
+              borderRadius: '2px',
+              textDecoration: 'none',
+            }}
+          >
+            ↓ DOWNLOAD
+          </a>
         </div>
       )}
 

@@ -95,9 +95,12 @@ function StatusBadge({ status }) {
   );
 }
 
+const SPEEDS = [0.5, 0.75, 1, 1.25, 1.5, 2];
+
 function SongRow({ song, onClick }) {
   const audioRef = React.useRef(null);
   const [playing, setPlaying] = React.useState(false);
+  const [speed, setSpeed] = React.useState(1);
 
   const borderColor = {
     Completed:  'var(--accent)',
@@ -170,9 +173,6 @@ function SongRow({ song, onClick }) {
           color: 'var(--text)',
           fontSize: '14px',
           fontWeight: 700,
-          whiteSpace: 'nowrap',
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
         }}>
           {song.title}
         </div>
@@ -187,6 +187,33 @@ function SongRow({ song, onClick }) {
         </div>
       </div>
 
+      {song.audio_file && (
+        <div onClick={e => e.stopPropagation()} style={{ display: 'flex', gap: '4px', flexShrink: 0 }}>
+          {SPEEDS.map(s => (
+            <button
+              key={s}
+              onClick={() => {
+                setSpeed(s);
+                if (audioRef.current) audioRef.current.playbackRate = s;
+              }}
+              style={{
+                background: speed === s ? 'var(--accent)' : 'transparent',
+                border: '1px solid ' + (speed === s ? 'var(--accent)' : 'var(--border)'),
+                color: speed === s ? 'var(--bg)' : 'var(--text-muted)',
+                fontFamily: 'var(--font-mono)',
+                fontSize: '9px',
+                padding: '3px 5px',
+                borderRadius: '2px',
+                cursor: 'pointer',
+                letterSpacing: '0.5px',
+              }}
+            >
+              {s}×
+            </button>
+          ))}
+        </div>
+      )}
+
       <StatusBadge status={song.status} />
     </div>
   );
@@ -197,3 +224,4 @@ function SongRow({ song, onClick }) {
 window.Header      = Header;
 window.StatusBadge = StatusBadge;
 window.SongRow     = SongRow;
+window.SPEEDS      = SPEEDS;
