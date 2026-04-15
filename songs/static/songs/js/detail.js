@@ -566,6 +566,7 @@ function SongDetail() {
   const [error, setError] = React.useState(null);
   const [deleting, setDeleting] = React.useState(false);
   const [copiedShare, setCopiedShare] = React.useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = React.useState(false);
 
   async function fetchSong() {
     try {
@@ -596,16 +597,26 @@ function SongDetail() {
   }, [song]);
 
   async function handleDelete() {
-    if (!confirm("Permanently delete this song?")) return;
     setDeleting(true);
     try {
       const res = await fetch(`/songs/${songId}/delete/`, { method: "DELETE" });
       if (!res.ok) throw new Error("Delete failed");
       window.location.href = "/";
     } catch (err) {
-      alert(err.message);
+      setError(err.message || "Delete failed");
       setDeleting(false);
+      setShowDeleteConfirm(false);
     }
+  }
+
+  function openDeleteConfirm() {
+    if (deleting) return;
+    setShowDeleteConfirm(true);
+  }
+
+  function closeDeleteConfirm() {
+    if (deleting) return;
+    setShowDeleteConfirm(false);
   }
 
   function handleCopyShareLink() {
@@ -783,7 +794,7 @@ function SongDetail() {
           </div>
 
           <button
-            onClick={handleDelete}
+            onClick={openDeleteConfirm}
             disabled={deleting}
             onMouseEnter={(e) => {
               if (!deleting)
@@ -873,6 +884,97 @@ function SongDetail() {
           )}
         </div>
       </div>
+
+      {showDeleteConfirm && (
+        <div
+          onClick={closeDeleteConfirm}
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.62)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 1000,
+            padding: "16px",
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              width: "100%",
+              maxWidth: "430px",
+              background: "var(--surface)",
+              border: "1px solid rgba(255,255,255,0.08)",
+              borderRadius: "14px",
+              boxShadow: "0 20px 60px rgba(0,0,0,0.55)",
+              padding: "22px",
+            }}
+          >
+            <div
+              style={{ fontSize: "18px", fontWeight: 800, marginBottom: "8px" }}
+            >
+              Delete song?
+            </div>
+            <p
+              style={{
+                color: "var(--text-muted)",
+                fontSize: "14px",
+                lineHeight: 1.6,
+                marginBottom: "18px",
+              }}
+            >
+              This action cannot be undone. The song will be permanently removed
+              from your library.
+            </p>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "flex-end",
+                gap: "10px",
+                flexWrap: "wrap",
+              }}
+            >
+              <button
+                type="button"
+                onClick={closeDeleteConfirm}
+                disabled={deleting}
+                style={{
+                  background: "transparent",
+                  border: "1px solid var(--surface-3)",
+                  color: "var(--text-muted)",
+                  fontSize: "13px",
+                  fontWeight: 600,
+                  padding: "9px 14px",
+                  borderRadius: "999px",
+                  cursor: deleting ? "not-allowed" : "pointer",
+                  opacity: deleting ? 0.6 : 1,
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleDelete}
+                disabled={deleting}
+                style={{
+                  background: "var(--error)",
+                  border: "1px solid var(--error)",
+                  color: "#1a0004",
+                  fontSize: "13px",
+                  fontWeight: 700,
+                  padding: "9px 14px",
+                  borderRadius: "999px",
+                  cursor: deleting ? "not-allowed" : "pointer",
+                  opacity: deleting ? 0.7 : 1,
+                }}
+              >
+                {deleting ? "Deleting…" : "Yes, Delete"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </React.Fragment>,
   );
 }
