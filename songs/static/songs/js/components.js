@@ -138,12 +138,8 @@ function StatusBadge({ status }) {
 
 const SPEEDS = [0.5, 0.75, 1, 1.25, 1.5, 2];
 
-function SongRow({ song, onClick, index }) {
-  const audioRef = React.useRef(null);
-  const [playing, setPlaying]       = React.useState(false);
-  const [speed, setSpeed]           = React.useState(1);
-  const [hovered, setHovered]       = React.useState(false);
-  const [showSpeeds, setShowSpeeds] = React.useState(false);
+function SongRow({ song, onClick, index, onPlay, isPlaying, isActive }) {
+  const [hovered, setHovered] = React.useState(false);
 
   const thumbGradients = {
     Completed:  'linear-gradient(135deg,#1DB954 0%,#0d7a3a 100%)',
@@ -153,13 +149,6 @@ function SongRow({ song, onClick, index }) {
   };
   const thumbGrad = thumbGradients[song.status] || thumbGradients.Pending;
 
-  function handlePlay(e) {
-    e.stopPropagation();
-    if (!song.audio_file || !audioRef.current) return;
-    if (audioRef.current.paused) { audioRef.current.play(); setPlaying(true); }
-    else                         { audioRef.current.pause(); setPlaying(false); }
-  }
-
   return (
     <div
       onClick={onClick}
@@ -167,7 +156,7 @@ function SongRow({ song, onClick, index }) {
       onMouseLeave={() => setHovered(false)}
       style={{
         display: 'grid',
-        gridTemplateColumns: '32px 52px 1fr auto auto',
+        gridTemplateColumns: '32px 52px 1fr auto',
         alignItems: 'center',
         gap: '14px',
         padding: '8px 12px',
@@ -180,20 +169,20 @@ function SongRow({ song, onClick, index }) {
     >
       {/* Index / play */}
       <div style={{ display: 'flex', justifyContent: 'center' }}>
-        {(hovered || playing) && song.audio_file ? (
+        {(hovered || isActive) && song.audio_file ? (
           <button
-            onClick={handlePlay}
+            onClick={e => { e.stopPropagation(); onPlay && onPlay(); }}
             style={{
               background: 'none', border: 'none', cursor: 'pointer',
-              color: playing ? 'var(--accent)' : 'var(--text)',
+              color: isPlaying ? 'var(--accent)' : 'var(--text)',
               fontSize: '14px', padding: 0, lineHeight: 1,
             }}
           >
-            {playing ? '⏸' : '▶'}
+            {isPlaying ? '⏸' : '▶'}
           </button>
         ) : (
-          <span style={{ color: playing ? 'var(--accent)' : 'var(--text-muted)', fontSize: '13px', fontWeight: 500 }}>
-            {playing ? '▶' : (index !== undefined ? index + 1 : '')}
+          <span style={{ color: isActive ? 'var(--accent)' : 'var(--text-muted)', fontSize: '13px', fontWeight: 500 }}>
+            {isActive ? '♪' : (index !== undefined ? index + 1 : '')}
           </span>
         )}
       </div>
@@ -212,7 +201,7 @@ function SongRow({ song, onClick, index }) {
       {/* Info */}
       <div style={{ minWidth: 0 }}>
         <div style={{
-          color: playing ? 'var(--accent)' : 'var(--text)',
+          color: isActive ? 'var(--accent)' : 'var(--text)',
           fontSize: '15px', fontWeight: 600,
           whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
           marginBottom: '3px',
@@ -227,66 +216,8 @@ function SongRow({ song, onClick, index }) {
         </div>
       </div>
 
-      {/* Speed */}
-      {song.audio_file ? (
-        <div onClick={e => e.stopPropagation()} style={{ position: 'relative', flexShrink: 0 }}>
-          <button
-            onClick={() => setShowSpeeds(v => !v)}
-            style={{
-              background: speed !== 1 ? 'var(--accent)' : 'transparent',
-              border: '1px solid ' + (speed !== 1 ? 'var(--accent)' : 'var(--surface-3)'),
-              color: speed !== 1 ? '#000' : 'var(--text-muted)',
-              fontFamily: 'var(--font-mono)',
-              fontSize: '9px', padding: '3px 8px',
-              borderRadius: '3px', cursor: 'pointer',
-            }}
-          >
-            speed {speed}×
-          </button>
-          {showSpeeds && (
-            <div style={{
-              position: 'absolute', bottom: 'calc(100% + 6px)', right: 0,
-              background: 'var(--surface-2)',
-              border: '1px solid var(--surface-3)',
-              borderRadius: '6px',
-              padding: '4px',
-              display: 'flex', gap: '3px',
-              zIndex: 20,
-              boxShadow: '0 4px 16px rgba(0,0,0,0.5)',
-            }}>
-              {SPEEDS.map(s => (
-                <button
-                  key={s}
-                  onClick={() => { setSpeed(s); if (audioRef.current) audioRef.current.playbackRate = s; setShowSpeeds(false); }}
-                  style={{
-                    background: speed === s ? 'var(--accent)' : 'transparent',
-                    border: '1px solid ' + (speed === s ? 'var(--accent)' : 'transparent'),
-                    color: speed === s ? '#000' : 'var(--text-muted)',
-                    fontFamily: 'var(--font-mono)',
-                    fontSize: '9px', padding: '2px 5px',
-                    borderRadius: '3px', cursor: 'pointer',
-                    whiteSpace: 'nowrap',
-                  }}
-                >
-                  {s}×
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-      ) : <div />}
-
       {/* Status */}
       <StatusBadge status={song.status} />
-
-      {song.audio_file && (
-        <audio
-          ref={audioRef}
-          src={song.audio_file}
-          onEnded={() => setPlaying(false)}
-          style={{ display: 'none' }}
-        />
-      )}
     </div>
   );
 }
