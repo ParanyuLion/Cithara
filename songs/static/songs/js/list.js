@@ -200,6 +200,21 @@ function SongList() {
     return () => clearInterval(timer);
   }, [songs]);
 
+  async function handleDelete(songId) {
+    try {
+      const res = await fetch(`/songs/${songId}/delete/`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Delete failed');
+      setSongs(prev => prev.filter(s => s.id !== songId));
+      if (nowPlaying?.id === songId) {
+        setNowPlaying(null);
+        setPlaying(false);
+        if (audioRef.current) { audioRef.current.pause(); audioRef.current.src = ''; }
+      }
+    } catch (err) {
+      alert(err.message);
+    }
+  }
+
   function handlePlay(song) {
     if (!song.audio_file) return;
     const audio = audioRef.current;
@@ -286,6 +301,7 @@ function SongList() {
               isPlaying={playing && nowPlaying?.id === song.id}
               isActive={nowPlaying?.id === song.id}
               onPlay={() => handlePlay(song)}
+              onDelete={() => handleDelete(song.id)}
               onClick={() => { window.location.href = `/song/${song.id}/`; }}
             />
           ))}

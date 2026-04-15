@@ -144,8 +144,9 @@ function StatusBadge({ status }) {
 
 const SPEEDS = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 2];
 
-function SongRow({ song, onClick, index, onPlay, isPlaying, isActive }) {
+function SongRow({ song, onClick, index, onPlay, isPlaying, isActive, onDelete }) {
   const [hovered, setHovered] = React.useState(false);
+  const [copied, setCopied]   = React.useState(false);
 
   const thumbGradients = {
     Completed:  'linear-gradient(135deg,#1DB954 0%,#0d7a3a 100%)',
@@ -166,6 +167,34 @@ function SongRow({ song, onClick, index, onPlay, isPlaying, isActive }) {
   const cardBg = hovered
     ? `linear-gradient(100deg, ${hoverTint} 0%, var(--surface-2) 55%)`
     : 'var(--surface-2)';
+
+  const actionBtn = {
+    background: 'rgba(255,255,255,0.07)',
+    border: '1px solid rgba(255,255,255,0.1)',
+    color: 'var(--text-muted)',
+    width: '28px', height: '28px',
+    borderRadius: '6px',
+    cursor: 'pointer',
+    fontSize: '13px',
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    flexShrink: 0,
+    transition: 'background 0.12s, color 0.12s',
+    textDecoration: 'none',
+  };
+
+  function handleCopyLink(e) {
+    e.stopPropagation();
+    navigator.clipboard.writeText(song.shareable_link).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }
+
+  function handleDeleteClick(e) {
+    e.stopPropagation();
+    if (!confirm('Permanently delete this song?')) return;
+    onDelete && onDelete();
+  }
 
   return (
     <div
@@ -188,29 +217,11 @@ function SongRow({ song, onClick, index, onPlay, isPlaying, isActive }) {
         userSelect: 'none',
       }}
     >
-      {/* Index / play */}
+      {/* Index */}
       <div style={{ display: 'flex', justifyContent: 'center' }}>
-        {(hovered || isActive) && song.audio_file ? (
-          <button
-            onClick={e => { e.stopPropagation(); onPlay && onPlay(); }}
-            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.12)'; }}
-            onMouseLeave={e => { e.currentTarget.style.background = 'none'; }}
-            style={{
-              background: 'none', border: 'none', cursor: 'pointer',
-              color: isPlaying ? 'var(--accent)' : 'var(--text)',
-              fontSize: '14px', padding: '8px', lineHeight: 1,
-              margin: '-8px', borderRadius: '50%',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              transition: 'background 0.12s',
-            }}
-          >
-            {isPlaying ? '⏸' : '▶'}
-          </button>
-        ) : (
-          <span style={{ color: isActive ? 'var(--accent)' : 'var(--text-muted)', fontSize: '13px', fontWeight: 500 }}>
-            {isActive ? '♪' : (index !== undefined ? index + 1 : '')}
-          </span>
-        )}
+        <span style={{ color: isActive ? 'var(--accent)' : 'var(--text-muted)', fontSize: '13px', fontWeight: 500 }}>
+          {isActive ? '♪' : (index !== undefined ? index + 1 : '')}
+        </span>
       </div>
 
       {/* Thumbnail */}
@@ -242,8 +253,67 @@ function SongRow({ song, onClick, index, onPlay, isPlaying, isActive }) {
         </div>
       </div>
 
-      {/* Status */}
-      <StatusBadge status={song.status} />
+      {/* Status + action buttons */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+
+        {/* Actions */}
+        <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }} onClick={e => e.stopPropagation()}>
+
+            {/* Play / Pause */}
+            {song.audio_file && (
+              <button
+                onClick={e => { e.stopPropagation(); onPlay && onPlay(); }}
+                title={isPlaying ? 'Pause' : 'Play'}
+                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(29,185,84,0.2)'; e.currentTarget.style.color = 'var(--accent)'; e.currentTarget.style.borderColor = 'var(--accent)'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.07)'; e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'; }}
+                style={{ ...actionBtn, color: isPlaying ? 'var(--accent)' : 'var(--text-muted)' }}
+              >
+                {isPlaying ? '⏸' : '▶'}
+              </button>
+            )}
+
+            {/* Download */}
+            {song.audio_file && (
+              <a
+                href={song.audio_file}
+                download
+                title="Download"
+                onClick={e => e.stopPropagation()}
+                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.15)'; e.currentTarget.style.color = 'var(--text)'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.07)'; e.currentTarget.style.color = 'var(--text-muted)'; }}
+                style={actionBtn}
+              >
+                ↓
+              </a>
+            )}
+
+            {/* Copy link */}
+            {song.shareable_link && (
+              <button
+                onClick={handleCopyLink}
+                title={copied ? 'Copied!' : 'Copy link'}
+                onMouseEnter={e => { if (!copied) { e.currentTarget.style.background = 'rgba(255,255,255,0.15)'; e.currentTarget.style.color = 'var(--text)'; }}}
+                onMouseLeave={e => { if (!copied) { e.currentTarget.style.background = 'rgba(255,255,255,0.07)'; e.currentTarget.style.color = 'var(--text-muted)'; }}}
+                style={{ ...actionBtn, background: copied ? 'rgba(29,185,84,0.2)' : 'rgba(255,255,255,0.07)', color: copied ? 'var(--accent)' : 'var(--text-muted)' }}
+              >
+                {copied ? '✓' : '⎘'}
+              </button>
+            )}
+
+            {/* Delete */}
+            <button
+              onClick={handleDeleteClick}
+              title="Delete"
+              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(241,94,108,0.2)'; e.currentTarget.style.color = 'var(--error)'; e.currentTarget.style.borderColor = 'var(--error)'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.07)'; e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'; }}
+              style={actionBtn}
+            >
+              🗑
+            </button>
+          </div>
+
+        <StatusBadge status={song.status} />
+      </div>
     </div>
   );
 }
