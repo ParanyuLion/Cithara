@@ -187,3 +187,44 @@ class SongListOwnershipTest(TestCase):
         response = self.client.get('/songs/')
         data = json.loads(response.content)
         self.assertEqual(data, [])
+
+
+class ShareableLinkTest(TestCase):
+
+    def setUp(self):
+        self.owner = User.objects.create_user(username='owner', password='pass')
+        self.friend = User.objects.create_user(username='friend', password='pass')
+        self.song = _make_song(self.owner, 'Shared Song')
+
+    def test_shareable_link_is_page_url(self):
+        self.client.force_login(self.owner)
+        response = self.client.get(f'/songs/{self.song.id}/')
+        data = json.loads(response.content)
+        self.assertEqual(data['shareable_link'], f'http://testserver/song/{self.song.id}/')
+
+    def test_song_list_shareable_link_is_page_url(self):
+        self.client.force_login(self.owner)
+        response = self.client.get('/songs/')
+        data = json.loads(response.content)
+        self.assertEqual(data[0]['shareable_link'], f'http://testserver/song/{self.song.id}/')
+
+    def test_non_creator_can_fetch_song_via_api(self):
+        self.client.force_login(self.friend)
+        response = self.client.get(f'/songs/{self.song.id}/')
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.content)
+        self.assertEqual(data['id'], self.song.id)
+
+    def test_non_creator_can_access_detail_page(self):
+        self.client.force_login(self.friend)
+        response = self.client.get(f'/song/{self.song.id}/')
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'songs/pages/detail.html')
+
+    def test_detail_page_redirects_friend_to_login_then_back(self):
+        response = self.client.get(f'/song/{self.song.id}/')
+        self.assertRedirects(
+            response,
+            f'/accounts/login/?next=/song/{self.song.id}/',
+            fetch_redirect_response=False,
+        )
