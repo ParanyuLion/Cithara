@@ -10,6 +10,10 @@ class SongRepository:
         """Return all non-deleted songs ordered newest-first."""
         return Song.objects.filter(deleted_at__isnull=True).order_by("-created_at")
 
+    def find_all_by_creator(self, user):
+        """Return all non-deleted songs for a specific user, ordered newest-first."""
+        return Song.objects.filter(creator=user, deleted_at__isnull=True).order_by("-created_at")
+
     def find_by_id(self, song_id: int) -> Song | None:
         """Return a non-deleted song by primary key, or None."""
         return Song.objects.filter(id=song_id, deleted_at__isnull=True).first()

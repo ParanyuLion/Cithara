@@ -1,0 +1,80 @@
+{% load socialaccount %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cithara — Sign In</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:         #0d0d0d;
+      --surface:    #111111;
+      --border:     #1e1e1e;
+      --accent:     #00ff88;
+      --text:       #ffffff;
+      --text-muted: #555555;
+      --font-mono:  'Courier New', Courier, monospace;
+      --font-sans:  'Inter', system-ui, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-sans);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 48px 40px;
+      text-align: center;
+      width: 320px;
+    }
+    .logo {
+      font-family: var(--font-mono);
+      color: var(--accent);
+      font-size: 16px;
+      letter-spacing: 4px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .tagline {
+      font-family: var(--font-mono);
+      color: var(--text-muted);
+      font-size: 10px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 40px;
+    }
+    .btn {
+      display: block;
+      width: 100%;
+      background: var(--accent);
+      color: #000;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      text-decoration: none;
+      padding: 12px 24px;
+      border-radius: 2px;
+    }
+    .btn:hover { opacity: 0.88; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo">◆ CITHARA</div>
+    <div class="tagline">AI Song Generator</div>
+    <a class="btn" href="{% provider_login_url 'google' %}">Sign in with Google</a>
+  </div>
+</body>
+</html>

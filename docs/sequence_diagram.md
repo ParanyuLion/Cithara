@@ -1,17 +1,57 @@
-# Sequence Diagram — Song Generation Use Case
+# Sequence Diagrams
+
+## 1. Google OAuth Login Flow
 
 ```mermaid
 sequenceDiagram
     actor User
-    participant V   as SongView
+    participant B   as Browser
+    participant D   as Django (allauth)
+    participant G   as Google OAuth
+
+    User->>B: Visit any page (e.g. /)
+    B->>D: GET /
+    D-->>B: 302 → /accounts/login/?next=/
+
+    B->>D: GET /accounts/login/
+    D-->>B: 200 login.html (Sign in with Google button)
+
+    User->>B: Click "Sign in with Google"
+    B->>D: GET /accounts/google/login/
+    D-->>B: 302 → accounts.google.com (with client_id, redirect_uri, PKCE)
+
+    B->>G: GET accounts.google.com/o/oauth2/auth
+    G-->>B: Google consent screen
+    User->>B: Grant permission
+
+    G-->>B: 302 → /accounts/google/login/callback/?code=...
+    B->>D: GET /accounts/google/login/callback/?code=...
+    D->>G: POST (exchange code for tokens)
+    G-->>D: access_token + id_token
+    D->>D: Find or create User from Google profile
+    D-->>B: 302 → /new/ (LOGIN_REDIRECT_URL)
+
+    B->>D: GET /new/
+    D-->>B: 200 create.html
+```
+
+## 2. Song Generation Flow (Suno)
+
+```mermaid
+sequenceDiagram
+    actor User
+    participant B   as Browser (React)
+    participant V   as SongView (API)
     participant SS  as SongService
     participant SR  as SongRepository
     participant SC  as SunoClient
     participant SUNO as SUNO API
 
     %% ── Step 1: Create request ──────────────────────────────────────────────
-    User->>V: POST /songs/create/ {title, genre, mood, ocasion, singer_voice}
-    V->>SS: create_song(title, genre, mood, ocasion, singer_voice, creator, prompt)
+    User->>B: Fill form and submit
+    B->>V: POST /songs/create/ {title, genre, mood, ocasion, singer_voice}
+    Note over V: _require_auth → passes (session cookie)
+    V->>SS: create_song(title, genre, mood, ocasion, singer_voice, creator=request.user, prompt)
 
     SS->>SR: save(song) [status=PENDING]
     SR-->>SS: song (id assigned)
@@ -26,12 +66,14 @@ sequenceDiagram
     SR-->>SS: song
 
     SS-->>V: song
-    V-->>User: 201 {id, title, status="Generating"}
+    V-->>B: 201 {id, title, status="Generating"}
+    B-->>User: Shows song in "Generating" state
 
     %% ── Step 3: SUNO async callback ─────────────────────────────────────────
     Note over SUNO,V: SUNO generates the song asynchronously then calls back
 
     SUNO->>V: POST /songs/suno-callback/ {data: {task_id, callbackType, data: [tracks]}}
+    Note over V: No auth check — server-to-server webhook
     V->>SS: handle_suno_callback(task_id, callback_type, tracks)
     SS->>SR: find_by_suno_task_id(task_id)
     SR-->>SS: song
@@ -52,9 +94,9 @@ sequenceDiagram
 
 ## Notes
 
-- Songs are persisted immediately with `PENDING` status so they appear in `GET /songs/` from the start.
-- Status transitions: `PENDING → GENERATING → COMPLETED | FAILED`.
-- Generation is **non-blocking** — `POST /songs/create/` returns immediately with status `Generating`.
-- SUNO calls back our `/songs/suno-callback/` webhook when generation completes or fails.
-- `shareable_link` is populated with the SUNO `audio_url` on success.
-- The `callBackUrl` must be a publicly reachable URL (e.g. via ngrok during local development).
+- All page views (`/`, `/new/`, `/song/<id>/`) are protected by `@login_required` — unauthenticated requests redirect to `/accounts/login/`.
+- All API endpoints (`/songs/*`) return `401` for unauthenticated requests, except `suno-callback` which is intentionally open (server-to-server webhook).
+- Each user sees only their own songs — `SongRepository.find_all_by_creator(user)` filters by `creator` and excludes soft-deleted songs.
+- Status transitions: `PENDING → GENERATING → COMPLETED | FAILED` (Suno) or `PENDING → COMPLETED | FAILED` (mock, synchronous).
+- `shareable_link` is populated with the Suno `audio_url` on success.
+- `callBackUrl` must be publicly reachable (use ngrok for local development).

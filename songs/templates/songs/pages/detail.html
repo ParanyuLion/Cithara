@@ -1,0 +1,9 @@
+{% extends "songs/base.html" %}
+{% load static %}
+{% block title %}Cithara — Song Detail{% endblock %}
+{% block head %}
+<script>window.SONG_ID = {{ song_id }};</script>
+{% endblock %}
+{% block scripts %}
+<script src="{% static 'songs/js/detail.js' %}" type="text/babel" data-presets="react"></script>
+{% endblock %}
