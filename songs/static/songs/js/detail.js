@@ -134,7 +134,7 @@ function AudioPlayer({ src }) {
           </button>
           {showSpeeds && (
             <div style={{
-              position: 'absolute', bottom: 'calc(100% + 6px)', left: 0,
+              position: 'absolute', bottom: 'calc(100% + 6px)', left: '50%', transform: 'translateX(-50%)',
               background: 'var(--surface-2)',
               border: '1px solid var(--surface-3)',
               borderRadius: '6px',

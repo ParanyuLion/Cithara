@@ -142,7 +142,7 @@ function StatusBadge({ status }) {
   );
 }
 
-const SPEEDS = [0.5, 0.75, 1, 1.25, 1.5, 2];
+const SPEEDS = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 2];
 
 function SongRow({ song, onClick, index, onPlay, isPlaying, isActive }) {
   const [hovered, setHovered] = React.useState(false);
