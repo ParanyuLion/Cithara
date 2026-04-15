@@ -276,30 +276,8 @@ function SongList() {
           </div>
         )}
 
-        {/* Table header */}
-        {songs.length > 0 && (
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: '32px 52px 1fr auto',
-            gap: '14px',
-            padding: '0 12px 10px',
-            borderBottom: '1px solid var(--surface-2)',
-            marginBottom: '4px',
-            color: 'var(--text-muted)',
-            fontSize: '11px',
-            fontWeight: 600,
-            letterSpacing: '0.5px',
-            textTransform: 'uppercase',
-          }}>
-            <div style={{ textAlign: 'center' }}>#</div>
-            <div></div>
-            <div>Title</div>
-            <div>Status</div>
-          </div>
-        )}
-
-        {/* Song rows */}
-        <div style={{ display: 'flex', flexDirection: 'column' }}>
+        {/* Song cards */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           {songs.map((song, index) => (
             <PageSongRow
               key={song.id}

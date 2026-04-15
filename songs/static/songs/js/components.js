@@ -155,6 +155,18 @@ function SongRow({ song, onClick, index, onPlay, isPlaying, isActive }) {
   };
   const thumbGrad = thumbGradients[song.status] || thumbGradients.Pending;
 
+  const hoverTints = {
+    Completed:  'rgba(29,185,84,0.07)',
+    Generating: 'rgba(255,164,43,0.07)',
+    Pending:    'rgba(255,255,255,0.03)',
+    Failed:     'rgba(241,94,108,0.07)',
+  };
+  const hoverTint = hoverTints[song.status] || hoverTints.Pending;
+
+  const cardBg = hovered
+    ? `linear-gradient(100deg, ${hoverTint} 0%, var(--surface-2) 55%)`
+    : 'var(--surface-2)';
+
   return (
     <div
       onClick={onClick}
@@ -165,11 +177,14 @@ function SongRow({ song, onClick, index, onPlay, isPlaying, isActive }) {
         gridTemplateColumns: '32px 52px 1fr auto',
         alignItems: 'center',
         gap: '14px',
-        padding: '8px 12px',
-        borderRadius: '6px',
-        background: hovered ? 'var(--surface-2)' : 'transparent',
+        padding: '10px 14px',
+        borderRadius: '10px',
+        background: cardBg,
+        border: '1px solid ' + (hovered ? 'rgba(255,255,255,0.09)' : 'rgba(255,255,255,0.05)'),
+        boxShadow: hovered ? '0 4px 20px rgba(0,0,0,0.45)' : '0 1px 4px rgba(0,0,0,0.25)',
         cursor: 'pointer',
-        transition: 'background 0.12s',
+        transition: 'background 0.18s, box-shadow 0.18s, border-color 0.18s, transform 0.15s',
+        transform: hovered ? 'translateY(-1px)' : 'translateY(0)',
         userSelect: 'none',
       }}
     >
