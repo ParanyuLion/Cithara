@@ -5,11 +5,12 @@ const PageStatusBadge = window.StatusBadge;
 function AudioPlayer({ src }) {
   const audioRef  = React.useRef(null);
   const seekRef   = React.useRef(null);
-  const [playing, setPlaying]   = React.useState(false);
-  const [speed, setSpeed]       = React.useState(1);
-  const [current, setCurrent]   = React.useState(0);
-  const [duration, setDuration] = React.useState(0);
-  const [volume, setVolume]     = React.useState(1);
+  const [playing, setPlaying]       = React.useState(false);
+  const [speed, setSpeed]           = React.useState(1);
+  const [current, setCurrent]       = React.useState(0);
+  const [duration, setDuration]     = React.useState(0);
+  const [volume, setVolume]         = React.useState(1);
+  const [showSpeeds, setShowSpeeds] = React.useState(false);
 
   function fmt(s) {
     if (!s || isNaN(s)) return '0:00';
@@ -112,28 +113,54 @@ function AudioPlayer({ src }) {
       {/* Speed + Volume row */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap' }}>
         {/* Speed */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <span style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: 600, flexShrink: 0 }}>
-            Speed
-          </span>
-          {window.SPEEDS.map(s => (
-            <button
-              key={s}
-              onClick={() => setPlaybackSpeed(s)}
-              style={{
-                background: speed === s ? 'var(--accent)' : 'transparent',
-                border: '1px solid ' + (speed === s ? 'var(--accent)' : 'var(--surface-3)'),
-                color: speed === s ? '#000' : 'var(--text-muted)',
-                fontFamily: 'var(--font-mono)',
-                fontSize: '10px',
-                padding: '3px 7px',
-                borderRadius: '4px',
-                cursor: 'pointer',
-              }}
-            >
-              {s}×
-            </button>
-          ))}
+        <div style={{ position: 'relative' }}>
+          <button
+            onClick={() => setShowSpeeds(v => !v)}
+            style={{
+              background: speed !== 1 ? 'var(--accent)' : 'transparent',
+              border: '1px solid ' + (speed !== 1 ? 'var(--accent)' : 'var(--surface-3)'),
+              color: speed !== 1 ? '#000' : 'var(--text-muted)',
+              fontFamily: 'var(--font-mono)',
+              fontSize: '10px',
+              padding: '3px 10px',
+              borderRadius: '4px',
+              cursor: 'pointer',
+            }}
+          >
+            speed {speed}×
+          </button>
+          {showSpeeds && (
+            <div style={{
+              position: 'absolute', bottom: 'calc(100% + 6px)', left: 0,
+              background: 'var(--surface-2)',
+              border: '1px solid var(--surface-3)',
+              borderRadius: '6px',
+              padding: '4px',
+              display: 'flex', gap: '4px',
+              zIndex: 20,
+              boxShadow: '0 4px 16px rgba(0,0,0,0.5)',
+            }}>
+              {window.SPEEDS.map(s => (
+                <button
+                  key={s}
+                  onClick={() => { setPlaybackSpeed(s); setShowSpeeds(false); }}
+                  style={{
+                    background: speed === s ? 'var(--accent)' : 'transparent',
+                    border: '1px solid ' + (speed === s ? 'var(--accent)' : 'transparent'),
+                    color: speed === s ? '#000' : 'var(--text-muted)',
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '10px',
+                    padding: '3px 7px',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {s}×
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Volume */}

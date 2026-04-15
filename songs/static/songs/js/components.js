@@ -140,9 +140,10 @@ const SPEEDS = [0.5, 0.75, 1, 1.25, 1.5, 2];
 
 function SongRow({ song, onClick, index }) {
   const audioRef = React.useRef(null);
-  const [playing, setPlaying] = React.useState(false);
-  const [speed, setSpeed]     = React.useState(1);
-  const [hovered, setHovered] = React.useState(false);
+  const [playing, setPlaying]       = React.useState(false);
+  const [speed, setSpeed]           = React.useState(1);
+  const [hovered, setHovered]       = React.useState(false);
+  const [showSpeeds, setShowSpeeds] = React.useState(false);
 
   const thumbGradients = {
     Completed:  'linear-gradient(135deg,#1DB954 0%,#0d7a3a 100%)',
@@ -228,23 +229,50 @@ function SongRow({ song, onClick, index }) {
 
       {/* Speed */}
       {song.audio_file ? (
-        <div onClick={e => e.stopPropagation()} style={{ display: 'flex', gap: '3px', flexShrink: 0 }}>
-          {SPEEDS.map(s => (
-            <button
-              key={s}
-              onClick={() => { setSpeed(s); if (audioRef.current) audioRef.current.playbackRate = s; }}
-              style={{
-                background: speed === s ? 'var(--accent)' : 'transparent',
-                border: '1px solid ' + (speed === s ? 'var(--accent)' : 'var(--surface-3)'),
-                color: speed === s ? '#000' : 'var(--text-muted)',
-                fontFamily: 'var(--font-mono)',
-                fontSize: '9px', padding: '2px 5px',
-                borderRadius: '3px', cursor: 'pointer',
-              }}
-            >
-              {s}×
-            </button>
-          ))}
+        <div onClick={e => e.stopPropagation()} style={{ position: 'relative', flexShrink: 0 }}>
+          <button
+            onClick={() => setShowSpeeds(v => !v)}
+            style={{
+              background: speed !== 1 ? 'var(--accent)' : 'transparent',
+              border: '1px solid ' + (speed !== 1 ? 'var(--accent)' : 'var(--surface-3)'),
+              color: speed !== 1 ? '#000' : 'var(--text-muted)',
+              fontFamily: 'var(--font-mono)',
+              fontSize: '9px', padding: '3px 8px',
+              borderRadius: '3px', cursor: 'pointer',
+            }}
+          >
+            speed {speed}×
+          </button>
+          {showSpeeds && (
+            <div style={{
+              position: 'absolute', bottom: 'calc(100% + 6px)', right: 0,
+              background: 'var(--surface-2)',
+              border: '1px solid var(--surface-3)',
+              borderRadius: '6px',
+              padding: '4px',
+              display: 'flex', gap: '3px',
+              zIndex: 20,
+              boxShadow: '0 4px 16px rgba(0,0,0,0.5)',
+            }}>
+              {SPEEDS.map(s => (
+                <button
+                  key={s}
+                  onClick={() => { setSpeed(s); if (audioRef.current) audioRef.current.playbackRate = s; setShowSpeeds(false); }}
+                  style={{
+                    background: speed === s ? 'var(--accent)' : 'transparent',
+                    border: '1px solid ' + (speed === s ? 'var(--accent)' : 'transparent'),
+                    color: speed === s ? '#000' : 'var(--text-muted)',
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '9px', padding: '2px 5px',
+                    borderRadius: '3px', cursor: 'pointer',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {s}×
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       ) : <div />}
 

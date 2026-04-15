@@ -105,7 +105,7 @@ function SongList() {
             <div style={{ textAlign: 'center' }}>#</div>
             <div></div>
             <div>Title</div>
-            <div>Speed</div>
+            <div></div>
             <div>Status</div>
           </div>
         )}
