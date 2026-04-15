@@ -58,6 +58,8 @@ function SongList() {
       <PageHeader rightSlot={newSongBtn} />
       <main style={{ maxWidth: '800px', margin: '0 auto', padding: '32px 24px' }}>
 
+        <h1 style={{ fontSize: '22px', fontWeight: 900, marginBottom: '24px' }}>My Library</h1>
+
         {loading && (
           <p style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', fontSize: '12px', letterSpacing: '2px' }}>
             LOADING...

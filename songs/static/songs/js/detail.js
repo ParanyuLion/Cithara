@@ -132,6 +132,56 @@ function AudioPlayer({ src }) {
   );
 }
 
+function ShareableLink({ url, fieldLabel }) {
+  const [copied, setCopied] = React.useState(false);
+
+  function handleCopy() {
+    navigator.clipboard.writeText(url).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }
+
+  const mono = { fontFamily: 'var(--font-mono)', fontSize: '10px', letterSpacing: '1px' };
+
+  return (
+    <div style={{ marginBottom: '24px' }}>
+      <div style={fieldLabel}>Shareable Link</div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+        <a
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            color: 'var(--accent)',
+            fontFamily: 'var(--font-mono)',
+            fontSize: '12px',
+            wordBreak: 'break-all',
+          }}
+        >
+          {url}
+        </a>
+        <button
+          onClick={handleCopy}
+          style={{
+            flexShrink: 0,
+            background: copied ? 'var(--accent)' : 'transparent',
+            border: '1px solid ' + (copied ? 'var(--accent)' : 'var(--border)'),
+            color: copied ? 'var(--bg)' : 'var(--text-muted)',
+            ...mono,
+            padding: '4px 10px',
+            borderRadius: '2px',
+            cursor: 'pointer',
+            letterSpacing: '2px',
+          }}
+        >
+          {copied ? 'COPIED' : 'COPY'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function SongDetail() {
   const songId = window.SONG_ID;
   const [song, setSong]         = React.useState(null);
@@ -178,22 +228,21 @@ function SongDetail() {
     }
   }
 
-  const backLink = (
-    <a href="/" style={{
-      color: 'var(--text-muted)',
-      fontFamily: 'var(--font-mono)',
-      fontSize: '11px',
-      letterSpacing: '1px',
-      textDecoration: 'none',
-    }}>
-      ← BACK
-    </a>
-  );
-
   const wrapMain = content => (
     <div>
-      <PageHeader rightSlot={backLink} />
+      <PageHeader />
       <main style={{ maxWidth: '700px', margin: '0 auto', padding: '40px 24px' }}>
+        <a href="/" style={{
+          display: 'inline-block',
+          marginBottom: '24px',
+          color: 'var(--text-muted)',
+          fontFamily: 'var(--font-mono)',
+          fontSize: '11px',
+          letterSpacing: '1px',
+          textDecoration: 'none',
+        }}>
+          ← BACK
+        </a>
         {content}
       </main>
     </div>
@@ -292,22 +341,7 @@ function SongDetail() {
 
       {/* Shareable link */}
       {song.shareable_link && (
-        <div style={{ marginBottom: '24px' }}>
-          <div style={fieldLabel}>Shareable Link</div>
-          <a
-            href={song.shareable_link}
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{
-              color: 'var(--accent)',
-              fontFamily: 'var(--font-mono)',
-              fontSize: '12px',
-              wordBreak: 'break-all',
-            }}
-          >
-            {song.shareable_link}
-          </a>
-        </div>
+        <ShareableLink url={song.shareable_link} fieldLabel={fieldLabel} />
       )}
 
       {/* Delete */}
