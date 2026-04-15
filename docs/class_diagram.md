@@ -2,18 +2,44 @@
 
 ```mermaid
 classDiagram
+    %% ── Auth Layer (django-allauth) ─────────────────────────────────────────
+    class GoogleOAuth {
+        <<django-allauth>>
+        +provider: "google"
+        +scopes: [email, profile]
+        +pkce: enabled
+        +LOGIN_REDIRECT_URL: "/new/"
+    }
+
+    class User {
+        <<Django built-in>>
+        +id : int
+        +username : str
+        +email : str
+    }
+
+    GoogleOAuth --> User : creates / links
+
     %% ── Presentation Layer ──────────────────────────────────────────────────
+    class PageViews {
+        <<Presentation - HTML>>
+        +page_list(request) TemplateResponse
+        +page_create(request) TemplateResponse
+        +page_detail(request, song_id) TemplateResponse
+        note: decorated with @login_required
+    }
+
     class SongView {
-        <<Presentation>>
+        <<Presentation - API>>
         +song_list(request) JsonResponse
         +song_create(request) JsonResponse
         +song_detail(request, song_id) JsonResponse
         +song_delete(request, song_id) JsonResponse
         +song_update(request, song_id) JsonResponse
         +suno_callback(request) JsonResponse
+        -_require_auth(request) JsonResponse|None
         -_parse_json_body(request) tuple
         -_serialize_song(song, include_meta) dict
-        -_resolve_creator(request) User
     }
 
     %% ── Service Layer ───────────────────────────────────────────────────────
@@ -21,7 +47,7 @@ classDiagram
         <<Service>>
         -repository : SongRepository
         -generator : SongGeneratorStrategy
-        +list_songs() QuerySet
+        +list_songs_by_creator(user) QuerySet
         +get_song(song_id) Song
         +create_song(title, genre, mood, ocasion, singer_voice, creator, prompt) Song
         +generate_song(song) Song
@@ -34,7 +60,7 @@ classDiagram
     %% ── Repository Layer ────────────────────────────────────────────────────
     class SongRepository {
         <<Repository>>
-        +find_all() QuerySet
+        +find_all_by_creator(user) QuerySet
         +find_by_id(song_id) Song
         +find_by_id_including_deleted(song_id) Song
         +find_by_suno_task_id(task_id) Song
@@ -81,6 +107,8 @@ classDiagram
     class GenerationResult {
         <<DataClass>>
         +task_id : str
+        +audio_url : str
+        +audio_content : bytes
     }
 
     %% ── Domain Layer ────────────────────────────────────────────────────────
@@ -120,6 +148,7 @@ classDiagram
     }
 
     %% ── Relationships ───────────────────────────────────────────────────────
+    PageViews                 --> SongService             : uses
     SongView                  --> SongService             : uses
     SongService               --> SongRepository          : uses
     SongService               --> SongGeneratorStrategy   : uses
@@ -131,14 +160,17 @@ classDiagram
     SongRepository            --> Song                    : manages
     Song                      --> Genre                   : has
     Song                      --> Status                  : has
+    Song                      --> User                    : creator
 ```
 
 ## Layer Responsibilities
 
 | Layer | Module | Responsibility |
 |-------|--------|----------------|
-| Presentation | `songs/views.py` | HTTP parsing, routing, JSON serialisation |
+| Auth | `django-allauth` + `templates/account/login.html` | Google OAuth2 login, session management |
+| Presentation (pages) | `songs/views.py` `page_*` + `songs/templates/` | Server-rendered HTML pages, `@login_required` guard |
+| Presentation (API) | `songs/views.py` `song_*` | HTTP parsing, JSON serialisation, 401 auth guard |
 | Service | `songs/services/song_service.py` | Business logic, orchestration |
-| Repository | `songs/repositories/song_repository.py` | Database access (ORM) |
-| Client | `songs/clients/suno_client.py` | SUNO external API calls |
+| Repository | `songs/repositories/song_repository.py` | Database access (ORM), per-user filtering |
+| Client | `songs/clients/` | Suno external API calls, generation strategies |
 | Domain | `songs/models/` | Data model, enumerations |

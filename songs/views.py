@@ -1,11 +1,12 @@
 import json
 from typing import Any
 
+from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
 from django.http import JsonResponse
+from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
-from django.contrib.auth.models import User
 
 from songs.models import Song
 from songs.services import SongService
@@ -14,6 +15,13 @@ _song_service = SongService()
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
+
+def _require_auth(request):
+    """Return a 401 JsonResponse if the request is unauthenticated, else None."""
+    if not request.user.is_authenticated:
+        return JsonResponse({"error": "Authentication required"}, status=401)
+    return None
+
 
 def _parse_json_body(request):
     try:
@@ -53,17 +61,13 @@ def _serialize_song(song: Song, include_meta: bool = False) -> dict[str, Any]:
     return payload
 
 
-def _resolve_creator(request):
-    if request.user.is_authenticated:
-        return request.user
-    return User.objects.order_by("id").first()
-
-
-# ── Views ─────────────────────────────────────────────────────────────────────
+# ── API Views ─────────────────────────────────────────────────────────────────
 
 @require_http_methods(["GET"])
 def song_list(request):
-    songs = _song_service.list_songs()
+    if err := _require_auth(request):
+        return err
+    songs = _song_service.list_songs_by_creator(request.user)
     data = [_serialize_song(song, include_meta=True) for song in songs]
     return JsonResponse(data, safe=False)
 
@@ -71,13 +75,12 @@ def song_list(request):
 @csrf_exempt
 @require_http_methods(["POST"])
 def song_create(request):
+    if err := _require_auth(request):
+        return err
+
     data, error = _parse_json_body(request)
     if error:
         return error
-
-    creator = _resolve_creator(request)
-    if not creator:
-        return JsonResponse({"error": "No user found. Create a user first."}, status=400)
 
     required_fields = ["title", "genre", "mood", "ocasion", "singer_voice"]
     for field in required_fields:
@@ -91,7 +94,7 @@ def song_create(request):
             mood=data["mood"],
             ocasion=data["ocasion"],
             singer_voice=data["singer_voice"],
-            creator=creator,
+            creator=request.user,
             prompt=data.get("prompt"),
         )
         return JsonResponse(
@@ -104,6 +107,8 @@ def song_create(request):
 
 @require_http_methods(["GET"])
 def song_detail(request, song_id):
+    if err := _require_auth(request):
+        return err
     song = _song_service.get_song(song_id)
     if song is None:
         return JsonResponse({"error": "Song not found"}, status=404)
@@ -113,6 +118,8 @@ def song_detail(request, song_id):
 @csrf_exempt
 @require_http_methods(["DELETE"])
 def song_delete(request, song_id):
+    if err := _require_auth(request):
+        return err
     try:
         song = _song_service.delete_song(song_id)
     except ValueError as e:
@@ -129,7 +136,7 @@ def song_delete(request, song_id):
 def suno_callback(request):
     """
     Webhook called by sunoapi.org when a generation task completes or fails.
-    Register this URL as SUNO_CALLBACK_URL in settings / .env.
+    Intentionally exempt from authentication — this is a server-to-server call.
     """
     data, error = _parse_json_body(request)
     if error:
@@ -150,6 +157,9 @@ def suno_callback(request):
 @csrf_exempt
 @require_http_methods(["PATCH"])
 def song_update(request, song_id):
+    if err := _require_auth(request):
+        return err
+
     data, error = _parse_json_body(request)
     if error:
         return error
@@ -176,3 +186,20 @@ def song_update(request, song_id):
         {"message": "Updated successfully", "id": song.id, "title": song.title, "status": song.status},
         status=200,
     )
+
+
+# ── Frontend Page Views ───────────────────────────────────────────────────────
+
+@login_required
+def page_list(request):
+    return render(request, 'songs/pages/list.html')
+
+
+@login_required
+def page_create(request):
+    return render(request, 'songs/pages/create.html')
+
+
+@login_required
+def page_detail(request, song_id):
+    return render(request, 'songs/pages/detail.html', {'song_id': song_id})

@@ -1,6 +1,6 @@
 # Cithara
 
-A Django-based web application for generating songs.
+A Django-based web application for AI-powered song generation with Google OAuth authentication.
 
 ## Project Structure
 
@@ -9,41 +9,79 @@ Cithara/
 ├── manage.py              # Django management script
 ├── db.sqlite3             # SQLite database
 ├── README.md              # This file
+├── .env.example           # Environment variable template
+├── templates/             # Project-level templates
+│   └── account/
+│       └── login.html     # Google OAuth login page
 ├── mysite/                # Django project configuration
-│   ├── settings.py        # Project settings
-│   ├── urls.py            # Main URL routing
-│   ├── asgi.py            # ASGI config
-│   ├── wsgi.py            # WSGI config
+│   ├── settings.py        # Project settings (allauth, OAuth)
+│   ├── urls.py            # Main URL routing (incl. /accounts/)
+│   ├── asgi.py
+│   ├── wsgi.py
 │   └── __init__.py
 └── songs/                 # Songs Django app
-    ├── models.py          # Database models
-    ├── views.py           # View logic
+    ├── models/            # Song, Status (enum), Genre (enum)
+    ├── repositories/      # SongRepository (DB access layer)
+    ├── services/          # SongService (business logic)
+    ├── clients/           # Strategy pattern for song generation
+    │   ├── base.py            SongGeneratorStrategy ABC
+    │   ├── mock_strategy.py   MockSongGeneratorStrategy (offline)
+    │   ├── suno_client.py     SunoClient (HTTP calls to sunoapi.org)
+    │   ├── suno_strategy.py   SunoSongGeneratorStrategy (async)
+    │   └── __init__.py        get_generator_strategy() factory
+    ├── static/songs/      # React (Babel standalone) frontend
+    │   └── js/
+    │       ├── components.js  Shared components (Header, SongRow, StatusBadge)
+    │       ├── list.js        Song list page
+    │       ├── create.js      Create song page
+    │       └── detail.js      Song detail page
+    ├── templates/songs/   # Django templates for each page
+    │   ├── base.html
+    │   └── pages/
+    │       ├── list.html
+    │       ├── create.html
+    │       └── detail.html
+    ├── views.py           # Function-based views + page views
     ├── urls.py            # App URL routing
-    ├── admin.py           # Django admin configuration
-    ├── apps.py            # App configuration
-    ├── tests.py           # Tests
-    └── migrations/        # Database migrations
+    ├── admin.py
+    ├── apps.py
+    ├── tests.py           # 22 tests
+    └── migrations/
+```
+
+## Architecture
+
+```
+Browser → Django Page Views (@login_required)
+              ↓ renders React SPA template
+        React (Babel standalone)
+              ↓ fetch()
+        Django API Views (_require_auth)
+              ↓
+        SongService → SongRepository → ORM
+              ↓
+        SongGeneratorStrategy (mock | suno)
 ```
 
 ## Domain Model
 
 ![Domain Model](DomainModel.png)
 
-- The Library entity was merged into the User model to simplify the 1:1 relationship and optimize query performance.
-
-- Utilized Django's built-in User model to avoid redundancy and ensure out-of-the-box security.
+- Django's built-in `User` model is used as `creator` on each `Song`.
+- Songs are never hard-deleted; `deleted_at` marks soft deletion.
+- Each user sees only their own songs.
 
 ## Setup Instructions
 
 1. **Create a virtual environment:**
 
    ```bash
-   python -m venv venv
+   python -m venv .venv
    ```
 
 2. **Activate the virtual environment:**
-   - On Windows: `venv\Scripts\activate`
-   - On macOS/Linux: `source venv/bin/activate`
+   - On Windows: `.venv\Scripts\activate`
+   - On macOS/Linux: `source .venv/bin/activate`
 
 3. **Install dependencies:**
 
@@ -51,76 +89,114 @@ Cithara/
    pip install -r requirements.txt
    ```
 
-4. **Apply migrations:**
+4. **Configure environment variables:**
+
+   ```bash
+   cp .env.example .env
+   # Edit .env and fill in the required values (see below)
+   ```
+
+5. **Apply migrations:**
 
    ```bash
    python manage.py migrate
    ```
 
-5. **Create a superuser**
+6. **Create a superuser** (needed to register the Google OAuth app in Django admin):
+
    ```bash
    python manage.py createsuperuser
    ```
 
-## Running the Application
+7. **Register Google OAuth credentials** (see [Google OAuth Setup](#google-oauth-setup) below).
 
-Start the development server:
+## Running the Application
 
 ```bash
 python manage.py runserver
 ```
 
-The application will be available at `http://127.0.0.1:8000/`
+The application is at `http://127.0.0.1:8000/`. All pages require Google login.
+
+## Running Tests
+
+```bash
+python manage.py test
+```
+
+22 tests covering: repository filtering, service delegation, frontend page auth redirects, API auth (401), and ownership isolation.
+
+## Google OAuth Setup
+
+### 1. Google Cloud Console
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com/) → **APIs & Services** → **Credentials**
+2. Create an **OAuth 2.0 Client ID** (type: Web application)
+3. Add to **Authorized redirect URIs**:
+   ```
+   http://127.0.0.1:8000/accounts/google/login/callback/
+   ```
+4. Copy the **Client ID** and **Client secret**
+
+### 2. Environment variables
+
+Add to your `.env`:
+
+```
+GOOGLE_CLIENT_ID=your_client_id_here
+GOOGLE_CLIENT_SECRET=your_client_secret_here
+```
+
+### 3. Django admin
+
+1. Visit `http://127.0.0.1:8000/admin/`
+2. Go to **Social Applications** → **Add**
+3. Provider: `Google`, Name: `Google`
+4. Paste Client ID and Secret key
+5. Move your site (`example.com`) to **Chosen sites**
+6. Save
 
 ## Admin Panel
 
-Access the Django admin panel at `http://127.0.0.1:8000/admin/` with your superuser credentials.
+`http://127.0.0.1:8000/admin/` — Django admin with superuser credentials.
 
 ## Features
 
-- Song management system
-- Django admin interface
-- URL routing
+- Google OAuth login (via `django-allauth`) — every page and API requires auth
+- Per-user song isolation — each user sees only their own songs
+- AI song generation (mock offline or Suno via sunoapi.org)
+- React SPA frontend (Babel standalone, no build step)
+- Soft delete
+- Async Suno webhook callback
 
 ## API Documentation
 
-For detailed information about the API endpoints, request/response formats, and usage examples, see [API.md](API.md).
+See [API.md](API.md) for full request/response schemas.
 
-The API provides endpoints for:
-- Listing all songs
-- Creating new songs
-- Retrieving song details
-- Updating songs
-- Deleting songs (soft delete)
+| Method   | Path                        | Auth required | Description                    |
+|----------|-----------------------------|---------------|--------------------------------|
+| `GET`    | `/songs/`                   | Yes           | List authenticated user's songs|
+| `POST`   | `/songs/create/`            | Yes           | Create and submit a song       |
+| `GET`    | `/songs/<id>/`              | Yes           | Get song detail                |
+| `PATCH`  | `/songs/<id>/update/`       | Yes           | Update song status             |
+| `DELETE` | `/songs/<id>/delete/`       | Yes           | Soft-delete a song             |
+| `POST`   | `/songs/suno-callback/`     | No            | Webhook for Suno completion    |
+
+Unauthenticated API requests return `401`. The suno-callback endpoint is intentionally open (server-to-server webhook).
 
 ## Song Generation Strategies
 
-The application supports two interchangeable generation strategies, selected via the `GENERATOR_STRATEGY` environment variable.
-
-### Minimal demonstration:
-https://docs.google.com/document/d/1Rptjo4XFmIBNdzM6YRPJNi_vqKKYi73lGFW-fOgnpiQ/edit?usp=sharing 
+Selected via the `GENERATOR_STRATEGY` environment variable.
 
 ### Mock Mode (offline, no API key required)
 
-Generates a song instantly using a placeholder audio URL — no external API calls, no network needed.
+```
+GENERATOR_STRATEGY=mock
+```
 
-1. Set the strategy in your `.env` file:
-   ```
-   GENERATOR_STRATEGY=mock
-   ```
-2. Start the server normally:
-   ```bash
-   python manage.py runserver
-   ```
-3. Create a song via `POST /songs/create/` — it will return `status: "Completed"` immediately with a placeholder audio URL.
+Returns `status: "Completed"` immediately with a placeholder audio URL.
 
 ### Suno Mode (calls sunoapi.org)
-
-Generates a real AI song via the [sunoapi.org](https://sunoapi.org) API.
-
-#### Required `.env` settings
-
-Create a `.env` file in the project root (never commit this file):
 
 ```
 GENERATOR_STRATEGY=suno
@@ -128,23 +204,23 @@ SUNO_API_KEY=your_api_key_here
 SUNO_CALLBACK_URL=https://your-public-url/songs/suno-callback/
 ```
 
-- **`SUNO_API_KEY`** — get your key from [sunoapi.org](https://sunoapi.org) after signing up.
-- **`SUNO_CALLBACK_URL`** — a publicly reachable URL that Suno will call when generation finishes. Use [ngrok](https://ngrok.com) for local development:
-  ```bash
-  ngrok http 8000
-  # then set: SUNO_CALLBACK_URL=https://<your-ngrok-subdomain>.ngrok-free.app/songs/suno-callback/
-  ```
+Returns `status: "Generating"` immediately. Suno calls back the webhook when done.
 
-#### Running in Suno mode
+For local development, use [ngrok](https://ngrok.com):
 
 ```bash
-python manage.py runserver
+ngrok http 8000
+# then set SUNO_CALLBACK_URL=https://<subdomain>.ngrok-free.app/songs/suno-callback/
 ```
-
-Create a song via `POST /songs/create/` — it returns `status: "Generating"` immediately. When Suno finishes, it calls the callback URL and the song status updates to `Completed` with the audio URL.
 
 ## Notes
 
-- Database: SQLite (db.sqlite3)
-- Python version: 3.x (as per Django requirements)
-- The `.env` file must not be committed to version control (add it to `.gitignore`).
+- Database: SQLite (`db.sqlite3`)
+- Django 6.0.3, Python 3.x
+- Never commit `.env` — it contains secrets.
+- `ocasion` (note the spelling) is the field name used throughout the codebase.
+- `ALLOWED_HOSTS` includes `*.ngrok-free.app` for local webhook testing.
+
+### Minimal demonstration
+
+https://docs.google.com/document/d/1Rptjo4XFmIBNdzM6YRPJNi_vqKKYi73lGFW-fOgnpiQ/edit?usp=sharing

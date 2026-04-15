@@ -23,6 +23,10 @@ class SongService:
     def list_songs(self):
         return self.repository.find_all()
 
+    def list_songs_by_creator(self, user):
+        """Return all non-deleted songs belonging to the given user."""
+        return self.repository.find_all_by_creator(user)
+
     def get_song(self, song_id: int) -> Song | None:
         return self.repository.find_by_id(song_id)
 

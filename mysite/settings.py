@@ -28,6 +28,8 @@ load_dotenv(BASE_DIR / ".env")
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-%=pu6c^5*a9(-vh^6byt3!&!1l22z6rfa3xea%ktc6@!1y+tzg'
 
+SITE_ID = 1
+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
@@ -44,6 +46,11 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.sites',         # required by allauth
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.google',
 ]
 
 MIDDLEWARE = [
@@ -54,14 +61,38 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'allauth.account.middleware.AccountMiddleware',
 ]
 
 ROOT_URLCONF = 'mysite.urls'
 
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+    'allauth.account.auth_backends.AuthenticationBackend',
+]
+
+LOGIN_REDIRECT_URL = '/new/'
+LOGOUT_REDIRECT_URL = '/accounts/login/'
+ACCOUNT_EMAIL_VERIFICATION = 'none'
+# Skips allauth's intermediate CSRF-protected POST confirmation page.
+# Trade-off: exposes /accounts/google/login/ to login-CSRF (an attacker link
+# can silently sign a victim in as the attacker's Google account).
+# Acceptable here because this is an internal tool with a controlled user base.
+# Remove this setting if the app is ever opened to the public.
+SOCIALACCOUNT_LOGIN_ON_GET = True
+
+SOCIALACCOUNT_PROVIDERS = {
+    'google': {
+        'SCOPE': ['email', 'profile'],
+        'AUTH_PARAMS': {'access_type': 'online'},
+        'OAUTH_PKCE_ENABLED': True,
+    }
+}
+
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -121,7 +152,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 
 MEDIA_URL = 'media/'
 MEDIA_ROOT = BASE_DIR / 'media'
