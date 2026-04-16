@@ -224,8 +224,6 @@ ngrok http 8000
 
 - Database: SQLite (`db.sqlite3`)
 - Django 6.0.3, Python 3.x
-- Never commit `.env` — it contains secrets.
-- `ocasion` (note the spelling) is the field name used throughout the codebase.
 - `ALLOWED_HOSTS` includes `*.ngrok-free.app` for local webhook testing.
 
 ### Minimal demonstration

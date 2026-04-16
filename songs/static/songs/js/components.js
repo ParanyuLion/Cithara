@@ -1,8 +1,108 @@
 /* Shared React components — exported to window.* for cross-script access. */
 
+function LibraryIcon({ active }) {
+  return (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      style={{
+        color: active ? "var(--accent)" : "currentColor",
+        filter: active ? "drop-shadow(0 0 6px rgba(29,185,84,0.55))" : "none",
+        transition: "color 0.15s, filter 0.15s",
+      }}
+      aria-hidden="true"
+    >
+      <path
+        d="M4.5 5.5C4.5 4.95 4.95 4.5 5.5 4.5H18.5C19.05 4.5 19.5 4.95 19.5 5.5V18.5C19.5 19.05 19.05 19.5 18.5 19.5H5.5C4.95 19.5 4.5 19.05 4.5 18.5V5.5Z"
+        stroke="currentColor"
+        strokeWidth="1.8"
+      />
+      <path
+        d="M8 9H16"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+      <path
+        d="M8 13H13"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+      <circle
+        cx="16.7"
+        cy="14.8"
+        r="2.2"
+        stroke="currentColor"
+        strokeWidth="1.6"
+      />
+    </svg>
+  );
+}
+
+function SparkleIcon({ active }) {
+  return (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      style={{
+        color: active ? "var(--accent)" : "currentColor",
+        filter: active ? "drop-shadow(0 0 6px rgba(29,185,84,0.55))" : "none",
+        transition: "color 0.15s, filter 0.15s",
+      }}
+      aria-hidden="true"
+    >
+      <path
+        d="M12 4L13.8 8.2L18 10L13.8 11.8L12 16L10.2 11.8L6 10L10.2 8.2L12 4Z"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M18.5 4.5V7.5"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+      <path
+        d="M17 6H20"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+      <path
+        d="M5.5 16.5V19.5"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+      <path
+        d="M4 18H7"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
 function Header() {
   const currentUser = window.CURRENT_USER;
   const path = window.location.pathname;
+
+  const displayName =
+    (currentUser || "Guest")
+      .split("@")[0]
+      .replace(/[._-]+/g, " ")
+      .replace(/\b\w/g, (c) => c.toUpperCase())
+      .trim() || "Guest";
+  const avatarText = displayName.charAt(0).toUpperCase() || "G";
 
   function handleSignOut() {
     const form = document.createElement("form");
@@ -18,8 +118,18 @@ function Header() {
   }
 
   const navItems = [
-    { label: "My Library", href: "/", icon: "◉" },
-    { label: "New Song", href: "/new/", icon: "+" },
+    {
+      label: "My Library",
+      href: "/",
+      icon: LibraryIcon,
+      activeOn: (p) => p === "/" || p.startsWith("/song/"),
+    },
+    {
+      label: "New Song",
+      href: "/new/",
+      icon: SparkleIcon,
+      activeOn: (p) => p === "/new/",
+    },
   ];
 
   return (
@@ -65,7 +175,8 @@ function Header() {
       {/* Nav */}
       <nav style={{ padding: "0 8px", flex: 1 }}>
         {navItems.map((item) => {
-          const active = path === item.href;
+          const active = item.activeOn(path);
+          const Icon = item.icon;
           return (
             <a
               key={item.href}
@@ -89,16 +200,34 @@ function Header() {
                 fontSize: "14px",
                 background: active ? "var(--surface-2)" : "transparent",
                 marginBottom: "2px",
-                transition: "background 0.12s",
+                transition: "background 0.12s, color 0.12s",
+                position: "relative",
+                overflow: "hidden",
               }}
             >
               <span
                 style={{
-                  fontSize: "15px",
-                  color: active ? "var(--accent)" : "inherit",
+                  position: "absolute",
+                  left: 0,
+                  top: "18%",
+                  bottom: "18%",
+                  width: "3px",
+                  borderRadius: "0 3px 3px 0",
+                  background: "var(--accent)",
+                  opacity: active ? 1 : 0,
+                  transition: "opacity 0.15s",
+                }}
+              />
+              <span
+                style={{
+                  width: "16px",
+                  height: "16px",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
                 }}
               >
-                {item.icon}
+                <Icon active={active} />
               </span>
               {item.label}
             </a>
@@ -106,45 +235,107 @@ function Header() {
         })}
       </nav>
 
-      {/* User + sign out */}
+      {/* User mini-card */}
       <div style={{ padding: "16px", borderTop: "1px solid var(--surface-2)" }}>
         <div
           style={{
-            color: "var(--text-muted)",
-            fontSize: "12px",
-            marginBottom: "10px",
-            whiteSpace: "nowrap",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
+            border: "1px solid rgba(255,255,255,0.08)",
+            background:
+              "linear-gradient(145deg, rgba(255,255,255,0.04), rgba(255,255,255,0.015))",
+            borderRadius: "12px",
+            padding: "10px",
+            boxShadow: "0 6px 24px rgba(0,0,0,0.35)",
+            position: "relative",
           }}
         >
-          {currentUser}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "10px",
+              minWidth: 0,
+            }}
+          >
+            <div
+              style={{
+                width: "34px",
+                height: "34px",
+                borderRadius: "50%",
+                flexShrink: 0,
+                background:
+                  "radial-gradient(circle at 30% 25%, #43dd7f 0%, #1DB954 45%, #0d7a3a 100%)",
+                color: "#06140a",
+                fontWeight: 800,
+                fontSize: "14px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                boxShadow:
+                  "0 0 0 2px rgba(29,185,84,0.2), 0 4px 12px rgba(29,185,84,0.2)",
+              }}
+            >
+              {avatarText}
+            </div>
+            <div style={{ minWidth: 0, flex: 1 }}>
+              <div
+                style={{
+                  color: "var(--text)",
+                  fontSize: "13px",
+                  fontWeight: 700,
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                }}
+                title={displayName}
+              >
+                {displayName}
+              </div>
+              <div
+                style={{
+                  color: "var(--text-muted)",
+                  fontSize: "11px",
+                  marginTop: "1px",
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                }}
+                title={currentUser}
+              >
+                {currentUser}
+              </div>
+            </div>
+          </div>
+
+          <button
+            onClick={handleSignOut}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = "rgba(241,94,108,0.16)";
+              e.currentTarget.style.color = "#ffd5da";
+              e.currentTarget.style.borderColor = "rgba(241,94,108,0.35)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = "transparent";
+              e.currentTarget.style.color = "var(--text-muted)";
+              e.currentTarget.style.borderColor = "var(--surface-3)";
+            }}
+            style={{
+              marginTop: "10px",
+              width: "100%",
+              background: "transparent",
+              border: "1px solid var(--surface-3)",
+              color: "var(--text-muted)",
+              fontSize: "12px",
+              fontWeight: 600,
+              padding: "7px 9px",
+              borderRadius: "8px",
+              cursor: "pointer",
+              textAlign: "center",
+              transition: "background 0.12s, color 0.12s, border-color 0.12s",
+            }}
+          >
+            Sign Out
+          </button>
         </div>
-        <button
-          onClick={handleSignOut}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = "var(--surface-2)";
-            e.currentTarget.style.color = "var(--text)";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = "transparent";
-            e.currentTarget.style.color = "var(--text-muted)";
-          }}
-          style={{
-            width: "100%",
-            background: "transparent",
-            border: "1px solid var(--surface-3)",
-            color: "var(--text-muted)",
-            fontSize: "13px",
-            fontWeight: 600,
-            padding: "8px",
-            borderRadius: "8px",
-            cursor: "pointer",
-            transition: "background 0.15s, color 0.15s",
-          }}
-        >
-          Sign Out
-        </button>
       </div>
     </aside>
   );
@@ -202,9 +393,15 @@ function formatRelativeTime(isoString) {
 
 function formatFullDate(isoString) {
   const d = new Date(isoString);
-  return d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })
-    + " at "
-    + d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+  return (
+    d.toLocaleDateString("en-GB", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    }) +
+    " at " +
+    d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })
+  );
 }
 function SongRow({
   song,
@@ -217,7 +414,7 @@ function SongRow({
 }) {
   const [hovered, setHovered] = React.useState(false);
   const [copyState, setCopyState] = React.useState(null); // null | 'copied' | 'error'
-  const [dlState, setDlState] = React.useState(null);     // null | 'error'
+  const [dlState, setDlState] = React.useState(null); // null | 'error'
   function calcProgress() {
     const elapsed = (Date.now() - new Date(song.created_at).getTime()) / 1000;
     return Math.min(85, 5 + (elapsed / 120) * 80);
@@ -284,16 +481,16 @@ function SongRow({
     e.stopPropagation();
     try {
       const res = await fetch(song.audio_file);
-      if (!res.ok) throw new Error('Download failed');
+      if (!res.ok) throw new Error("Download failed");
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
+      const a = document.createElement("a");
       a.href = url;
-      a.download = (song.title || 'song').replace(/[^\w\s-]/g, '') + '.mp3';
+      a.download = (song.title || "song").replace(/[^\w\s-]/g, "") + ".mp3";
       a.click();
       URL.revokeObjectURL(url);
     } catch {
-      setDlState('error');
+      setDlState("error");
       setTimeout(() => setDlState(null), 3000);
     }
   }
@@ -301,17 +498,18 @@ function SongRow({
   function handleCopyLink(e) {
     e.stopPropagation();
     if (!song.shareable_link) {
-      setCopyState('error');
+      setCopyState("error");
       setTimeout(() => setCopyState(null), 3000);
       return;
     }
-    navigator.clipboard.writeText(song.shareable_link)
+    navigator.clipboard
+      .writeText(song.shareable_link)
       .then(() => {
-        setCopyState('copied');
+        setCopyState("copied");
         setTimeout(() => setCopyState(null), 2000);
       })
       .catch(() => {
-        setCopyState('error');
+        setCopyState("error");
         setTimeout(() => setCopyState(null), 3000);
       });
   }
@@ -324,12 +522,12 @@ function SongRow({
   function handleRegenerate(e) {
     e.stopPropagation();
     const params = new URLSearchParams({
-      title:        song.title        || '',
-      genre:        song.genre        || '',
-      mood:         song.mood         || '',
-      ocasion:      song.ocasion      || '',
-      singer_voice: song.singer_voice || '',
-      prompt:       song.prompt       || '',
+      title: song.title || "",
+      genre: song.genre || "",
+      mood: song.mood || "",
+      ocasion: song.ocasion || "",
+      singer_voice: song.singer_voice || "",
+      prompt: song.prompt || "",
     });
     window.location.href = `/new/?${params.toString()}`;
   }
@@ -352,13 +550,13 @@ function SongRow({
           (isPlaying
             ? "rgba(29,185,84,0.55)"
             : hovered
-            ? "rgba(255,255,255,0.09)"
-            : "rgba(255,255,255,0.05)"),
+              ? "rgba(255,255,255,0.09)"
+              : "rgba(255,255,255,0.05)"),
         boxShadow: isPlaying
           ? "0 0 0 1px rgba(29,185,84,0.1), 0 4px 24px rgba(29,185,84,0.28)"
           : hovered
-          ? "0 4px 20px rgba(0,0,0,0.45)"
-          : "0 1px 4px rgba(0,0,0,0.25)",
+            ? "0 4px 20px rgba(0,0,0,0.45)"
+            : "0 1px 4px rgba(0,0,0,0.25)",
         cursor: "pointer",
         transition:
           "background 0.18s, box-shadow 0.18s, border-color 0.18s, transform 0.15s",
@@ -380,17 +578,26 @@ function SongRow({
       >
         <span
           style={{
-            color: hovered && song.audio_file ? "var(--text)" : isActive ? "var(--accent)" : "var(--text-muted)",
+            color:
+              hovered && song.audio_file
+                ? "var(--text)"
+                : isActive
+                  ? "var(--accent)"
+                  : "var(--text-muted)",
             fontSize: hovered && song.audio_file ? "14px" : "13px",
             fontWeight: 500,
             transition: "color 0.12s, font-size 0.12s",
           }}
         >
           {hovered && song.audio_file
-            ? isActive && isPlaying ? "⏸" : "▶"
+            ? isActive && isPlaying
+              ? "⏸"
+              : "▶"
             : isActive
-            ? "♪"
-            : index !== undefined ? index + 1 : ""}
+              ? "♪"
+              : index !== undefined
+                ? index + 1
+                : ""}
         </span>
       </div>
 
@@ -430,13 +637,48 @@ function SongRow({
           }}
         >
           {isActive && isPlaying && (
-            <span style={{ display: "inline-flex", alignItems: "flex-end", gap: "2px", flexShrink: 0, height: "14px" }}>
-              <span style={{ width: "3px", background: "var(--accent)", borderRadius: "1px", animation: "ceq1 0.7s ease-in-out infinite" }} />
-              <span style={{ width: "3px", background: "var(--accent)", borderRadius: "1px", animation: "ceq2 0.55s ease-in-out infinite" }} />
-              <span style={{ width: "3px", background: "var(--accent)", borderRadius: "1px", animation: "ceq3 0.85s ease-in-out infinite" }} />
+            <span
+              style={{
+                display: "inline-flex",
+                alignItems: "flex-end",
+                gap: "2px",
+                flexShrink: 0,
+                height: "14px",
+              }}
+            >
+              <span
+                style={{
+                  width: "3px",
+                  background: "var(--accent)",
+                  borderRadius: "1px",
+                  animation: "ceq1 0.7s ease-in-out infinite",
+                }}
+              />
+              <span
+                style={{
+                  width: "3px",
+                  background: "var(--accent)",
+                  borderRadius: "1px",
+                  animation: "ceq2 0.55s ease-in-out infinite",
+                }}
+              />
+              <span
+                style={{
+                  width: "3px",
+                  background: "var(--accent)",
+                  borderRadius: "1px",
+                  animation: "ceq3 0.85s ease-in-out infinite",
+                }}
+              />
             </span>
           )}
-          <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          <span
+            style={{
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+            }}
+          >
             {song.title}
           </span>
         </div>
@@ -501,27 +743,34 @@ function SongRow({
           {song.audio_file && (
             <button
               onClick={handleDownload}
-              title={dlState === 'error' ? 'Download failed' : 'Download'}
+              title={dlState === "error" ? "Download failed" : "Download"}
               onMouseEnter={(e) => {
-                if (dlState !== 'error') {
+                if (dlState !== "error") {
                   e.currentTarget.style.background = "rgba(255,255,255,0.15)";
                   e.currentTarget.style.color = "var(--text)";
                 }
               }}
               onMouseLeave={(e) => {
-                if (dlState !== 'error') {
+                if (dlState !== "error") {
                   e.currentTarget.style.background = "rgba(255,255,255,0.07)";
                   e.currentTarget.style.color = "var(--text-muted)";
                 }
               }}
               style={{
                 ...actionBtn,
-                background: dlState === 'error' ? "rgba(241,94,108,0.2)" : "rgba(255,255,255,0.07)",
-                color: dlState === 'error' ? "var(--error)" : "var(--text-muted)",
-                borderColor: dlState === 'error' ? "var(--error)" : "rgba(255,255,255,0.1)",
+                background:
+                  dlState === "error"
+                    ? "rgba(241,94,108,0.2)"
+                    : "rgba(255,255,255,0.07)",
+                color:
+                  dlState === "error" ? "var(--error)" : "var(--text-muted)",
+                borderColor:
+                  dlState === "error"
+                    ? "var(--error)"
+                    : "rgba(255,255,255,0.1)",
               }}
             >
-              {dlState === 'error' ? '✕' : '↓'}
+              {dlState === "error" ? "✕" : "↓"}
             </button>
           )}
 
@@ -529,7 +778,13 @@ function SongRow({
           {song.shareable_link && (
             <button
               onClick={handleCopyLink}
-              title={copyState === 'copied' ? "Copied!" : copyState === 'error' ? "Copy failed" : "Copy link"}
+              title={
+                copyState === "copied"
+                  ? "Copied!"
+                  : copyState === "error"
+                    ? "Copy failed"
+                    : "Copy link"
+              }
               onMouseEnter={(e) => {
                 if (!copyState) {
                   e.currentTarget.style.background = "rgba(255,255,255,0.15)";
@@ -544,12 +799,25 @@ function SongRow({
               }}
               style={{
                 ...actionBtn,
-                background: copyState === 'copied' ? "rgba(29,185,84,0.2)" : copyState === 'error' ? "rgba(241,94,108,0.2)" : "rgba(255,255,255,0.07)",
-                color: copyState === 'copied' ? "var(--accent)" : copyState === 'error' ? "var(--error)" : "var(--text-muted)",
-                borderColor: copyState === 'error' ? "var(--error)" : "rgba(255,255,255,0.1)",
+                background:
+                  copyState === "copied"
+                    ? "rgba(29,185,84,0.2)"
+                    : copyState === "error"
+                      ? "rgba(241,94,108,0.2)"
+                      : "rgba(255,255,255,0.07)",
+                color:
+                  copyState === "copied"
+                    ? "var(--accent)"
+                    : copyState === "error"
+                      ? "var(--error)"
+                      : "var(--text-muted)",
+                borderColor:
+                  copyState === "error"
+                    ? "var(--error)"
+                    : "rgba(255,255,255,0.1)",
               }}
             >
-              {copyState === 'copied' ? "✓" : copyState === 'error' ? "✕" : "⎘"}
+              {copyState === "copied" ? "✓" : copyState === "error" ? "✕" : "⎘"}
             </button>
           )}
 
@@ -592,7 +860,13 @@ function SongRow({
           </button>
         </div>
 
-        <span title={song.status === 'Failed' && song.failure_reason ? song.failure_reason : undefined}>
+        <span
+          title={
+            song.status === "Failed" && song.failure_reason
+              ? song.failure_reason
+              : undefined
+          }
+        >
           <StatusBadge status={song.status} />
         </span>
       </div>
