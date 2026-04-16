@@ -9,7 +9,7 @@ const inputStyle = {
   color: 'var(--text)',
   fontFamily: 'var(--font-sans)',
   fontSize: '14px',
-  padding: '12px 14px',
+  padding: '8px 12px',
   width: '100%',
   outline: 'none',
   borderRadius: '8px',
@@ -18,10 +18,10 @@ const inputStyle = {
 
 const labelStyle = {
   display: 'block',
-  fontSize: '13px',
+  fontSize: '12px',
   fontWeight: 600,
   color: 'var(--text-muted)',
-  marginBottom: '6px',
+  marginBottom: '4px',
 };
 
 function Field({ label, children }) {
@@ -84,7 +84,7 @@ function CreateSong() {
     <div style={{ display: 'flex', minHeight: '100vh' }}>
       <PageHeader />
 
-      <main style={{ flex: 1, padding: '40px 48px', overflowY: 'auto' }}>
+      <main style={{ flex: 1, padding: '20px 40px', overflowY: 'auto' }}>
         <div style={{ maxWidth: '960px', width: '100%' }}>
 
           {/* Back link */}
@@ -99,20 +99,20 @@ function CreateSong() {
               fontSize: '13px',
               fontWeight: 500,
               textDecoration: 'none',
-              marginBottom: '32px',
+              marginBottom: '12px',
               transition: 'color 0.15s',
             }}>
             ← Back
           </a>
 
-          <h1 style={{ fontSize: '32px', fontWeight: 900, letterSpacing: '-0.5px', marginBottom: '8px' }}>
+          <h1 style={{ fontSize: '26px', fontWeight: 900, letterSpacing: '-0.5px', marginBottom: '4px' }}>
             New Song
           </h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginBottom: '40px' }}>
+          <p style={{ color: 'var(--text-muted)', fontSize: '13px', marginBottom: '20px' }}>
             Fill in the details and let AI compose your song.
           </p>
 
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
 
             <Field label="Title *">
               <input
@@ -123,7 +123,7 @@ function CreateSong() {
             </Field>
 
             {/* Genre + Mood — flex wrap: 2-col on wide, stacks on narrow */}
-            <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
               <div style={{ flex: '1 1 200px', minWidth: 0 }}>
                 <Field label="Genre *">
                   <select
@@ -147,7 +147,7 @@ function CreateSong() {
             </div>
 
             {/* Occasion + Singer Voice — flex wrap */}
-            <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
               <div style={{ flex: '1 1 200px', minWidth: 0 }}>
                 <Field label="Occasion *">
                   <input
@@ -171,7 +171,7 @@ function CreateSong() {
             <Field label="Prompt (optional)">
               <textarea
                 name="prompt" value={form.prompt} onChange={handleChange}
-                rows={4}
+                rows={3}
                 style={{ ...inputStyle, resize: 'vertical', lineHeight: '1.6' }}
                 onFocus={focusGreen} onBlur={blurRestore}
                 placeholder="Additional instructions for the AI…"
@@ -192,7 +192,7 @@ function CreateSong() {
                   background: submitting ? 'var(--surface-3)' : 'var(--accent)',
                   color: submitting ? 'var(--text-muted)' : '#000',
                   border: 'none',
-                  padding: '14px 36px',
+                  padding: '11px 32px',
                   fontFamily: 'var(--font-sans)',
                   fontSize: '15px',
                   fontWeight: 700,

@@ -41,6 +41,7 @@ function Header() {
         <a
           href="/"
           style={{
+            color: "var(--text-muted)",
             textDecoration: "none",
             display: "flex",
             alignItems: "center",
