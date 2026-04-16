@@ -210,6 +210,18 @@ function SongRow({
     return () => clearInterval(id);
   }, [song.status]);
 
+  React.useEffect(() => {
+    if (document.getElementById("cithara-eq-style")) return;
+    const s = document.createElement("style");
+    s.id = "cithara-eq-style";
+    s.textContent = [
+      "@keyframes ceq1{0%,100%{height:3px}50%{height:12px}}",
+      "@keyframes ceq2{0%,100%{height:10px}50%{height:3px}}",
+      "@keyframes ceq3{0%,100%{height:6px}50%{height:14px}}",
+    ].join("");
+    document.head.appendChild(s);
+  }, []);
+
   const thumbGradients = {
     Completed: "linear-gradient(135deg,#1DB954 0%,#0d7a3a 100%)",
     Generating: "linear-gradient(135deg,#ffa42b 0%,#b56a00 100%)",
@@ -288,8 +300,14 @@ function SongRow({
         background: cardBg,
         border:
           "1px solid " +
-          (hovered ? "rgba(255,255,255,0.09)" : "rgba(255,255,255,0.05)"),
-        boxShadow: hovered
+          (isPlaying
+            ? "rgba(29,185,84,0.55)"
+            : hovered
+            ? "rgba(255,255,255,0.09)"
+            : "rgba(255,255,255,0.05)"),
+        boxShadow: isPlaying
+          ? "0 0 0 1px rgba(29,185,84,0.1), 0 4px 24px rgba(29,185,84,0.28)"
+          : hovered
           ? "0 4px 20px rgba(0,0,0,0.45)"
           : "0 1px 4px rgba(0,0,0,0.25)",
         cursor: "pointer",
@@ -301,16 +319,29 @@ function SongRow({
         overflow: "hidden",
       }}
     >
-      {/* Index */}
-      <div style={{ display: "flex", justifyContent: "center" }}>
+      {/* Index — click to play/pause without navigating to detail */}
+      <div
+        style={{ display: "flex", justifyContent: "center" }}
+        onClick={(e) => {
+          if (song.audio_file && onPlay) {
+            e.stopPropagation();
+            onPlay();
+          }
+        }}
+      >
         <span
           style={{
-            color: isActive ? "var(--accent)" : "var(--text-muted)",
-            fontSize: "13px",
+            color: hovered && song.audio_file ? "var(--text)" : isActive ? "var(--accent)" : "var(--text-muted)",
+            fontSize: hovered && song.audio_file ? "14px" : "13px",
             fontWeight: 500,
+            transition: "color 0.12s, font-size 0.12s",
           }}
         >
-          {isActive ? "♪" : index !== undefined ? index + 1 : ""}
+          {hovered && song.audio_file
+            ? isActive && isPlaying ? "⏸" : "▶"
+            : isActive
+            ? "♪"
+            : index !== undefined ? index + 1 : ""}
         </span>
       </div>
 
@@ -344,9 +375,21 @@ function SongRow({
             overflow: "hidden",
             textOverflow: "ellipsis",
             marginBottom: "3px",
+            display: "flex",
+            alignItems: "center",
+            gap: "7px",
           }}
         >
-          {song.title}
+          {isActive && isPlaying && (
+            <span style={{ display: "inline-flex", alignItems: "flex-end", gap: "2px", flexShrink: 0, height: "14px" }}>
+              <span style={{ width: "3px", background: "var(--accent)", borderRadius: "1px", animation: "ceq1 0.7s ease-in-out infinite" }} />
+              <span style={{ width: "3px", background: "var(--accent)", borderRadius: "1px", animation: "ceq2 0.55s ease-in-out infinite" }} />
+              <span style={{ width: "3px", background: "var(--accent)", borderRadius: "1px", animation: "ceq3 0.85s ease-in-out infinite" }} />
+            </span>
+          )}
+          <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            {song.title}
+          </span>
         </div>
         <div
           style={{
@@ -365,7 +408,7 @@ function SongRow({
       <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
         {/* Actions */}
         <div
-          style={{ display: "flex", gap: "4px", alignItems: "center" }}
+          style={{ display: "flex", gap: "8px", alignItems: "center" }}
           onClick={(e) => e.stopPropagation()}
         >
           {/* Play / Pause */}
