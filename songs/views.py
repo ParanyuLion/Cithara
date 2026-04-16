@@ -35,7 +35,10 @@ def _parse_json_body(request):
     return data, None
 
 
-def _serialize_song(song: Song, include_meta: bool = False) -> dict[str, Any]:
+def _serialize_song(song: Song, request=None, include_meta: bool = False) -> dict[str, Any]:
+    shareable_link = (
+        request.build_absolute_uri(f"/song/{song.id}/") if request else f"/song/{song.id}/"
+    )
     payload = {
         "id": song.id,
         "title": song.title,
@@ -45,7 +48,8 @@ def _serialize_song(song: Song, include_meta: bool = False) -> dict[str, Any]:
         "prompt": song.prompt,
         "singer_voice": song.singer_voice,
         "audio_file": song.audio_file.url if song.audio_file else None,
-        "shareable_link": song.shareable_link,
+        "shareable_link": shareable_link,
+        "failure_reason": song.failure_reason,
         "created_at": song.created_at.isoformat(),
         "status": song.status,
     }
@@ -68,7 +72,7 @@ def song_list(request):
     if err := _require_auth(request):
         return err
     songs = _song_service.list_songs_by_creator(request.user)
-    data = [_serialize_song(song, include_meta=True) for song in songs]
+    data = [_serialize_song(song, request=request, include_meta=True) for song in songs]
     return JsonResponse(data, safe=False)
 
 
@@ -112,7 +116,7 @@ def song_detail(request, song_id):
     song = _song_service.get_song(song_id)
     if song is None:
         return JsonResponse({"error": "Song not found"}, status=404)
-    return JsonResponse(_serialize_song(song))
+    return JsonResponse(_serialize_song(song, request=request))
 
 
 @csrf_exempt
@@ -183,7 +187,7 @@ def song_update(request, song_id):
         return JsonResponse({"error": "Song not found"}, status=404)
 
     return JsonResponse(
-        {"message": "Updated successfully", "id": song.id, "title": song.title, "status": song.status},
+        _serialize_song(song, request=request) | {"message": "Updated successfully"},
         status=200,
     )
 

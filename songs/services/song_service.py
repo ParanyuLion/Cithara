@@ -74,7 +74,8 @@ class SongService:
         Never raises — sets status to FAILED on any error.
         """
         try:
-            prompt = song.prompt or self._build_prompt(song)
+            base_prompt = self._build_prompt(song)
+            prompt = f"{base_prompt}. {song.prompt}" if song.prompt else base_prompt
             request = GenerationRequest(
                 prompt=prompt,
                 style=song.genre,
@@ -97,7 +98,7 @@ class SongService:
             )
         except Exception as e:
             logger.exception("Song generation failed for song %d: %s", song.id, e)
-            return self.repository.update_status(song, Status.FAILED)
+            return self.repository.update_status(song, Status.FAILED, failure_reason=str(e))
 
     def handle_suno_callback(self, task_id: str, callback_type: str, tracks: list) -> bool:
         """
@@ -132,9 +133,9 @@ class SongService:
                 logger.info("Song %d completed via SUNO callback", song.id)
             except Exception as e:
                 logger.exception("Failed to download audio for song %d: %s", song.id, e)
-                self.repository.update_status(song, Status.FAILED)
+                self.repository.update_status(song, Status.FAILED, failure_reason=f"Audio download failed: {e}")
         elif callback_type == "error":
-            self.repository.update_status(song, Status.FAILED)
+            self.repository.update_status(song, Status.FAILED, failure_reason="Suno reported a generation error")
             logger.warning("Song %d failed via SUNO callback", song.id)
         else:
             # "text" or "first" — intermediate progress, ignore
@@ -162,6 +163,7 @@ class SongService:
 
     def _build_prompt(self, song: Song) -> str:
         return (
+            f"Title: {song.title}. "
             f"A {song.genre} song with a {song.mood} mood, "
             f"suitable for {song.ocasion}, "
             f"sung by a {song.singer_voice} voice"
