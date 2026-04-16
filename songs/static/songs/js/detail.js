@@ -559,6 +559,187 @@ function ShareableLink({ url }) {
   );
 }
 
+function GeneratingCard({ status, createdAt }) {
+  function calcProgress() {
+    const elapsed = (Date.now() - new Date(createdAt).getTime()) / 1000;
+    return Math.min(85, 5 + (elapsed / 120) * 80);
+  }
+
+  const [progress, setProgress] = React.useState(calcProgress);
+
+  React.useEffect(() => {
+    if (!document.getElementById("cithara-spin-style")) {
+      const s = document.createElement("style");
+      s.id = "cithara-spin-style";
+      s.textContent =
+        "@keyframes cithara-spin { to { transform: rotate(360deg); } }";
+      document.head.appendChild(s);
+    }
+  }, []);
+
+  React.useEffect(() => {
+    const id = setInterval(() => setProgress(calcProgress()), 900);
+    return () => clearInterval(id);
+  }, []);
+
+  return (
+    <div
+      style={{
+        background: "var(--surface-2)",
+        borderRadius: "16px",
+        padding: "40px 24px",
+        border: "1px solid rgba(255,164,43,0.2)",
+        boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        gap: "20px",
+        textAlign: "center",
+      }}
+    >
+      <div
+        style={{
+          width: "52px",
+          height: "52px",
+          borderRadius: "50%",
+          border: "3px solid rgba(255,164,43,0.2)",
+          borderTopColor: "var(--warn)",
+          animation: "cithara-spin 1.2s linear infinite",
+        }}
+      />
+
+      <div>
+        <div
+          style={{
+            fontSize: "16px",
+            fontWeight: 700,
+            color: "var(--text)",
+            marginBottom: "6px",
+          }}
+        >
+          {status === "Pending" ? "Queued for generation…" : "Generating your song…"}
+        </div>
+        <div
+          style={{ fontSize: "13px", color: "var(--text-muted)", lineHeight: 1.6 }}
+        >
+          This usually takes 1–2 minutes. The page updates automatically.
+        </div>
+      </div>
+
+      <div
+        style={{
+          width: "100%",
+          height: "3px",
+          background: "rgba(255,255,255,0.08)",
+          borderRadius: "2px",
+          overflow: "hidden",
+        }}
+      >
+        <div
+          style={{
+            height: "100%",
+            width: progress + "%",
+            background: "var(--warn)",
+            transition: "width 0.85s ease",
+          }}
+        />
+      </div>
+    </div>
+  );
+}
+
+function FailedCard({ song }) {
+  function getRegenerateUrl() {
+    const params = new URLSearchParams({
+      title: song.title || "",
+      genre: song.genre || "",
+      mood: song.mood || "",
+      ocasion: song.ocasion || "",
+      singer_voice: song.singer_voice || "",
+      prompt: song.prompt || "",
+    });
+    return `/new/?${params.toString()}`;
+  }
+
+  return (
+    <div
+      style={{
+        background: "rgba(241,94,108,0.07)",
+        borderRadius: "16px",
+        padding: "40px 24px",
+        border: "1px solid rgba(241,94,108,0.22)",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        gap: "16px",
+        textAlign: "center",
+      }}
+    >
+      <div
+        style={{
+          width: "52px",
+          height: "52px",
+          borderRadius: "50%",
+          background: "rgba(241,94,108,0.12)",
+          border: "2px solid var(--error)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontSize: "22px",
+          color: "var(--error)",
+        }}
+      >
+        ✕
+      </div>
+
+      <div>
+        <div
+          style={{
+            fontSize: "16px",
+            fontWeight: 700,
+            color: "var(--error)",
+            marginBottom: "6px",
+          }}
+        >
+          Generation failed
+        </div>
+        <div
+          style={{ fontSize: "13px", color: "var(--text-muted)", lineHeight: 1.6 }}
+        >
+          Something went wrong while creating this song. You can try regenerating
+          it with the same settings.
+        </div>
+      </div>
+
+      <a
+        href={getRegenerateUrl()}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.background = "rgba(241,94,108,0.15)";
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.background = "transparent";
+        }}
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          gap: "6px",
+          background: "transparent",
+          border: "1px solid var(--error)",
+          color: "var(--error)",
+          fontSize: "13px",
+          fontWeight: 600,
+          padding: "9px 20px",
+          borderRadius: "999px",
+          textDecoration: "none",
+          transition: "background 0.15s",
+        }}
+      >
+        ↻ Try Again
+      </a>
+    </div>
+  );
+}
+
 function SongDetail() {
   const songId = window.SONG_ID;
   const [song, setSong] = React.useState(null);
@@ -834,11 +1015,19 @@ function SongDetail() {
         }}
       >
         {/* Audio col */}
-        {song.audio_file && (
+        {song.audio_file ? (
           <div style={{ flex: "1 1 320px", minWidth: 0 }}>
             <AudioPlayer song={song} />
           </div>
-        )}
+        ) : song.status === "Pending" || song.status === "Generating" ? (
+          <div style={{ flex: "1 1 320px", minWidth: 0 }}>
+            <GeneratingCard status={song.status} createdAt={song.created_at} />
+          </div>
+        ) : song.status === "Failed" ? (
+          <div style={{ flex: "1 1 320px", minWidth: 0 }}>
+            <FailedCard song={song} />
+          </div>
+        ) : null}
 
         {/* Metadata col */}
         <div style={{ flex: "1 1 260px", minWidth: 0 }}>

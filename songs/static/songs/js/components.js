@@ -197,6 +197,18 @@ function SongRow({
 }) {
   const [hovered, setHovered] = React.useState(false);
   const [copied, setCopied] = React.useState(false);
+  function calcProgress() {
+    const elapsed = (Date.now() - new Date(song.created_at).getTime()) / 1000;
+    return Math.min(85, 5 + (elapsed / 120) * 80);
+  }
+
+  const [fakeProgress, setFakeProgress] = React.useState(calcProgress);
+
+  React.useEffect(() => {
+    if (song.status !== "Pending" && song.status !== "Generating") return;
+    const id = setInterval(() => setFakeProgress(calcProgress()), 900);
+    return () => clearInterval(id);
+  }, [song.status]);
 
   const thumbGradients = {
     Completed: "linear-gradient(135deg,#1DB954 0%,#0d7a3a 100%)",
@@ -285,6 +297,8 @@ function SongRow({
           "background 0.18s, box-shadow 0.18s, border-color 0.18s, transform 0.15s",
         transform: hovered ? "translateY(-1px)" : "translateY(0)",
         userSelect: "none",
+        position: "relative",
+        overflow: "hidden",
       }}
     >
       {/* Index */}
@@ -472,6 +486,29 @@ function SongRow({
 
         <StatusBadge status={song.status} />
       </div>
+
+      {/* Fake progress bar — visible only while generating */}
+      {(song.status === "Pending" || song.status === "Generating") && (
+        <div
+          style={{
+            position: "absolute",
+            bottom: 0,
+            left: 0,
+            right: 0,
+            height: "2px",
+            background: "rgba(255,255,255,0.05)",
+          }}
+        >
+          <div
+            style={{
+              height: "100%",
+              width: fakeProgress + "%",
+              background: "var(--warn)",
+              transition: "width 0.85s ease",
+            }}
+          />
+        </div>
+      )}
     </div>
   );
 }
