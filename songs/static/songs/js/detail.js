@@ -730,6 +730,25 @@ function FailedCard({ song }) {
           Something went wrong while creating this song. You can try regenerating
           it with the same settings.
         </div>
+        {song.failure_reason && (
+          <div
+            style={{
+              marginTop: "12px",
+              padding: "10px 14px",
+              background: "rgba(241,94,108,0.1)",
+              border: "1px solid rgba(241,94,108,0.25)",
+              borderRadius: "8px",
+              fontSize: "12px",
+              color: "var(--error)",
+              fontFamily: "var(--font-mono)",
+              lineHeight: 1.5,
+              textAlign: "left",
+              wordBreak: "break-word",
+            }}
+          >
+            {song.failure_reason}
+          </div>
+        )}
       </div>
 
       <a

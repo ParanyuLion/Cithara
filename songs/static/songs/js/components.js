@@ -592,7 +592,9 @@ function SongRow({
           </button>
         </div>
 
-        <StatusBadge status={song.status} />
+        <span title={song.status === 'Failed' && song.failure_reason ? song.failure_reason : undefined}>
+          <StatusBadge status={song.status} />
+        </span>
       </div>
 
       {/* Fake progress bar — visible only while generating */}

@@ -16,6 +16,7 @@ class Song(models.Model):
     suno_task_id = models.CharField(max_length=100, blank=True, null=True)
     audio_file = models.FileField(upload_to="songs/", null=True, blank=True)
     shareable_link = models.URLField(max_length=500, blank=True, null=True)
+    failure_reason = models.CharField(max_length=500, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     deleted_at = models.DateTimeField(blank=True, null=True)
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING)

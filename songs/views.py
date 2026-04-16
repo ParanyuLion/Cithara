@@ -49,6 +49,7 @@ def _serialize_song(song: Song, request=None, include_meta: bool = False) -> dic
         "singer_voice": song.singer_voice,
         "audio_file": song.audio_file.url if song.audio_file else None,
         "shareable_link": shareable_link,
+        "failure_reason": song.failure_reason,
         "created_at": song.created_at.isoformat(),
         "status": song.status,
     }
