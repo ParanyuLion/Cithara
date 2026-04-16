@@ -186,6 +186,26 @@ function StatusBadge({ status }) {
 
 const SPEEDS = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 2];
 
+function formatRelativeTime(isoString) {
+  const diff = Date.now() - new Date(isoString).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.floor(hrs / 24);
+  if (days < 30) return `${days}d ago`;
+  const months = Math.floor(days / 30);
+  if (months < 12) return `${months}mo ago`;
+  return `${Math.floor(months / 12)}y ago`;
+}
+
+function formatFullDate(isoString) {
+  const d = new Date(isoString);
+  return d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })
+    + " at "
+    + d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+}
 function SongRow({
   song,
   onClick,
@@ -401,6 +421,16 @@ function SongRow({
           }}
         >
           {song.genre} · {song.mood} · {song.ocasion}
+        </div>
+        <div
+          style={{
+            color: "var(--text-muted)",
+            fontSize: "11px",
+            marginTop: "3px",
+            opacity: 0.6,
+          }}
+        >
+          {formatRelativeTime(song.created_at)}
         </div>
       </div>
 
