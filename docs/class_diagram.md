@@ -66,7 +66,7 @@ classDiagram
         +find_by_suno_task_id(task_id) Song
         +save(song) Song
         +soft_delete(song) Song
-        +update_status(song, status, audio_url, shareable_link, suno_task_id) Song
+        +update_status(song, status, shareable_link, suno_task_id, audio_file, failure_reason) Song
     }
 
     %% ── Client Layer ────────────────────────────────────────────────────────
@@ -93,7 +93,7 @@ classDiagram
         -_headers : dict
         -_model : str
         -_callback_url : str
-        +generate(prompt, style, title) str
+        +generate(prompt) str
         +get_status(task_id) dict
     }
 
@@ -124,6 +124,7 @@ classDiagram
         +audio_file : FileField
         +shareable_link : str
         +suno_task_id : str
+        +failure_reason : str
         +created_at : datetime
         +deleted_at : datetime
         +status : Status

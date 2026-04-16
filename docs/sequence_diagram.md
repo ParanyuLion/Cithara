@@ -57,8 +57,9 @@ sequenceDiagram
     SR-->>SS: song (id assigned)
 
     %% ── Step 2: Submit to SUNO ──────────────────────────────────────────────
-    SS->>SC: generate(prompt, style=genre, title)
-    SC->>SUNO: POST /api/v1/generate {prompt, style, title, model, callBackUrl}
+    SS->>SC: generate(prompt)
+    Note over SC: customMode=false — single merged prompt:\n"Title: X. A {genre} song with {mood} mood,\nsuitable for {ocasion}, sung by {voice}. {user_prompt}"
+    SC->>SUNO: POST /api/v1/generate {customMode:false, prompt, model, callBackUrl}
     SUNO-->>SC: {data: {taskId: "..."}}
     SC-->>SS: task_id (str)
 
@@ -79,10 +80,11 @@ sequenceDiagram
     SR-->>SS: song
 
     alt callbackType == "complete"
-        SS->>SR: update_status(song, COMPLETED, audio_url, shareable_link)
+        SS->>SS: download audio from tracks[0].audio_url
+        SS->>SR: update_status(song, COMPLETED, shareable_link, audio_file)
         SR-->>SS: song
     else callbackType == "error"
-        SS->>SR: update_status(song, FAILED)
+        SS->>SR: update_status(song, FAILED, failure_reason="Suno reported a generation error")
         SR-->>SS: song
     else callbackType == "text" or "first"
         Note over SS: Intermediate progress — ignored
@@ -98,5 +100,7 @@ sequenceDiagram
 - All API endpoints (`/songs/*`) return `401` for unauthenticated requests, except `suno-callback` which is intentionally open (server-to-server webhook).
 - Each user sees only their own songs — `SongRepository.find_all_by_creator(user)` filters by `creator` and excludes soft-deleted songs.
 - Status transitions: `PENDING → GENERATING → COMPLETED | FAILED` (Suno) or `PENDING → COMPLETED | FAILED` (mock, synchronous).
+- Suno is called with `customMode=false` — all attributes (title, genre, mood, occasion, voice, user prompt) are merged into a single `prompt` string.
+- `failure_reason` is stored on the Song when status transitions to FAILED; surfaced in the detail page UI.
 - `shareable_link` is populated with the Suno `audio_url` on success.
 - `callBackUrl` must be publicly reachable (use ngrok for local development).

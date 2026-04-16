@@ -45,8 +45,8 @@ Cithara/
     ├── urls.py            # App URL routing
     ├── admin.py
     ├── apps.py
-    ├── tests.py           # 22 tests
-    └── migrations/
+    ├── tests.py           # 27 tests
+    └── migrations/        # 0001_initial → 0003_song_failure_reason
 ```
 
 ## Architecture
@@ -63,12 +63,15 @@ Browser → Django Page Views (@login_required)
         SongGeneratorStrategy (mock | suno)
 ```
 
+Detailed diagrams: [class diagram](docs/class_diagram.md) · [sequence diagrams](docs/sequence_diagram.md)
+
 ## Domain Model
 
 ![Domain Model](DomainModel.png)
 
 - Django's built-in `User` model is used as `creator` on each `Song`.
 - Songs are never hard-deleted; `deleted_at` marks soft deletion.
+- `failure_reason` stores the error message when status is `Failed`.
 - Each user sees only their own songs.
 
 ## Setup Instructions
@@ -124,7 +127,7 @@ The application is at `http://127.0.0.1:8000/`. All pages require Google login.
 python manage.py test
 ```
 
-22 tests covering: repository filtering, service delegation, frontend page auth redirects, API auth (401), and ownership isolation.
+27 tests covering: repository filtering, service delegation, frontend page auth redirects, API auth (401), and ownership isolation.
 
 ## Google OAuth Setup
 
@@ -165,9 +168,13 @@ GOOGLE_CLIENT_SECRET=your_client_secret_here
 - Google OAuth login (via `django-allauth`) — every page and API requires auth
 - Per-user song isolation — each user sees only their own songs
 - AI song generation (mock offline or Suno via sunoapi.org)
+- Suno: `customMode=false`, single merged prompt (title + genre + mood + occasion + voice + custom)
+- Async Suno webhook callback with `failure_reason` capture on error
 - React SPA frontend (Babel standalone, no build step)
+- Relative timestamps in library; full date + relative in song detail
+- Download and copy-link error notifications in UI
+- Client-side prompt length validation (1,000 char limit)
 - Soft delete
-- Async Suno webhook callback
 
 ## API Documentation
 
