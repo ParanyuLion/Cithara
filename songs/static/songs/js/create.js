@@ -38,8 +38,24 @@ function CreateSong() {
     title: '', genre: '', mood: '', ocasion: '', singer_voice: '', prompt: '',
   });
   const [step, setStep]              = React.useState('form'); // 'form' | 'confirm'
+  const [isRegenerate, setIsRegenerate] = React.useState(false);
   const [error, setError]            = React.useState(null);
   const [submitting, setSubmitting]  = React.useState(false);
+
+  /* Pre-fill form from URL query params when arriving via Regenerate */
+  React.useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const fields = ['title', 'genre', 'mood', 'ocasion', 'singer_voice', 'prompt'];
+    const prefill = {};
+    fields.forEach(k => {
+      const v = params.get(k);
+      if (v) prefill[k] = v;
+    });
+    if (Object.keys(prefill).length > 0) {
+      setForm(prev => ({ ...prev, ...prefill }));
+      setIsRegenerate(true);
+    }
+  }, []);
 
   function handleChange(e) {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
@@ -126,10 +142,12 @@ function CreateSong() {
         </a>
 
         <h1 style={{ fontSize: '26px', fontWeight: 900, letterSpacing: '-0.5px', marginBottom: '4px' }}>
-          Confirm your song
+          {isRegenerate ? 'Confirm regeneration' : 'Confirm your song'}
         </h1>
         <p style={{ color: 'var(--text-muted)', fontSize: '13px', marginBottom: '20px' }}>
-          Review the details below before starting AI generation.
+          {isRegenerate
+            ? 'A new song will be created with these settings. Your previous song stays in the library.'
+            : 'Review the details below before starting AI generation.'}
         </p>
 
         {/* Summary card */}
@@ -243,10 +261,12 @@ function CreateSong() {
       </a>
 
       <h1 style={{ fontSize: '26px', fontWeight: 900, letterSpacing: '-0.5px', marginBottom: '4px' }}>
-        New Song
+        {isRegenerate ? 'Regenerate Song' : 'New Song'}
       </h1>
       <p style={{ color: 'var(--text-muted)', fontSize: '13px', marginBottom: '20px' }}>
-        Fill in the details and let AI compose your song.
+        {isRegenerate
+          ? 'Edit the details below — a new song will be created, the old one stays.'
+          : 'Fill in the details and let AI compose your song.'}
       </p>
 
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -339,7 +359,7 @@ function CreateSong() {
             onMouseEnter={e => { e.currentTarget.style.background = 'var(--accent-hover)'; e.currentTarget.style.transform = 'scale(1.02)'; }}
             onMouseLeave={e => { e.currentTarget.style.background = 'var(--accent)'; e.currentTarget.style.transform = 'scale(1)'; }}
           >
-            Create Song →
+            {isRegenerate ? 'Regenerate →' : 'Create Song →'}
           </button>
         </div>
 

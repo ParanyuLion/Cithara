@@ -248,6 +248,19 @@ function SongRow({
     onDelete && onDelete();
   }
 
+  function handleRegenerate(e) {
+    e.stopPropagation();
+    const params = new URLSearchParams({
+      title:        song.title        || '',
+      genre:        song.genre        || '',
+      mood:         song.mood         || '',
+      ocasion:      song.ocasion      || '',
+      singer_voice: song.singer_voice || '',
+      prompt:       song.prompt       || '',
+    });
+    window.location.href = `/new/?${params.toString()}`;
+  }
+
   return (
     <div
       onClick={onClick}
@@ -417,6 +430,25 @@ function SongRow({
               {copied ? "✓" : "⎘"}
             </button>
           )}
+
+          {/* Regenerate */}
+          <button
+            onClick={handleRegenerate}
+            title="Regenerate with same prompt"
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = "rgba(255,164,43,0.2)";
+              e.currentTarget.style.color = "var(--warn)";
+              e.currentTarget.style.borderColor = "var(--warn)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = "rgba(255,255,255,0.07)";
+              e.currentTarget.style.color = "var(--text-muted)";
+              e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)";
+            }}
+            style={actionBtn}
+          >
+            ↻
+          </button>
 
           {/* Delete */}
           <button
