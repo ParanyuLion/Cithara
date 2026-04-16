@@ -68,6 +68,10 @@ function CreateSong() {
   function handleSubmit(e) {
     e.preventDefault();
     setError(null);
+    if (form.prompt.length > 1000) {
+      setError(`Prompt is too long — ${form.prompt.length.toLocaleString()} / 1,000 characters. Please shorten it before continuing.`);
+      return;
+    }
     setStep('confirm');
   }
 
@@ -93,7 +97,17 @@ function CreateSong() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(typeof data.error === 'object' ? JSON.stringify(data.error) : data.error);
+        if (typeof data.error === 'object') {
+          const fieldLabels = { prompt: 'Prompt', title: 'Title', genre: 'Genre', mood: 'Mood', ocasion: 'Occasion', singer_voice: 'Singer Voice' };
+          const parts = [];
+          for (const [field, msgs] of Object.entries(data.error)) {
+            const label = fieldLabels[field] || field;
+            (Array.isArray(msgs) ? msgs : [msgs]).forEach(m => parts.push(`${label}: ${m}`));
+          }
+          setError(parts.join(' · '));
+        } else {
+          setError(data.error);
+        }
         setStep('form');
       } else {
         window.location.href = '/';
@@ -329,10 +343,15 @@ function CreateSong() {
           <textarea
             name="prompt" value={form.prompt} onChange={handleChange}
             rows={3}
-            style={{ ...inputStyle, resize: 'vertical', lineHeight: '1.6' }}
+            style={{ ...inputStyle, resize: 'vertical', lineHeight: '1.6', borderColor: form.prompt.length > 1000 ? 'var(--error)' : 'transparent' }}
             onFocus={focusGreen} onBlur={blurRestore}
             placeholder="Additional instructions for the AI…"
           />
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '4px' }}>
+            <span style={{ fontSize: '11px', color: form.prompt.length > 1000 ? 'var(--error)' : 'var(--text-muted)', fontWeight: form.prompt.length > 1000 ? 600 : 400 }}>
+              {form.prompt.length.toLocaleString()} / 1,000
+            </span>
+          </div>
         </Field>
 
         {error && (

@@ -767,7 +767,8 @@ function SongDetail() {
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState(null);
   const [deleting, setDeleting] = React.useState(false);
-  const [copiedShare, setCopiedShare] = React.useState(false);
+  const [shareState, setShareState] = React.useState(null); // null | 'copied' | 'error'
+  const [dlState, setDlState] = React.useState(null);       // null | 'error'
   const [showDeleteConfirm, setShowDeleteConfirm] = React.useState(false);
 
   async function fetchSong() {
@@ -821,16 +822,38 @@ function SongDetail() {
     setShowDeleteConfirm(false);
   }
 
+  async function handleDownload() {
+    try {
+      const res = await fetch(song.audio_file);
+      if (!res.ok) throw new Error('Download failed');
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = (song.title || 'song').replace(/[^\w\s-]/g, '') + '.mp3';
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      setDlState('error');
+      setTimeout(() => setDlState(null), 3000);
+    }
+  }
+
   function handleCopyShareLink() {
-    if (!song?.shareable_link) return;
+    if (!song?.shareable_link) {
+      setShareState('error');
+      setTimeout(() => setShareState(null), 3000);
+      return;
+    }
     navigator.clipboard
       .writeText(song.shareable_link)
       .then(() => {
-        setCopiedShare(true);
-        setTimeout(() => setCopiedShare(false), 2000);
+        setShareState('copied');
+        setTimeout(() => setShareState(null), 2000);
       })
       .catch(() => {
-        alert("Unable to copy link");
+        setShareState('error');
+        setTimeout(() => setShareState(null), 3000);
       });
   }
 
@@ -944,53 +967,53 @@ function SongDetail() {
         >
           <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
             {song.audio_file && (
-              <a
-                href={song.audio_file}
-                download
+              <button
+                onClick={handleDownload}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.background = "var(--accent-hover)";
-                  e.currentTarget.style.transform = "scale(1.02)";
+                  if (dlState !== 'error') {
+                    e.currentTarget.style.background = "var(--accent-hover)";
+                    e.currentTarget.style.transform = "scale(1.02)";
+                  }
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.background = "var(--accent)";
+                  e.currentTarget.style.background = dlState === 'error' ? "rgba(241,94,108,0.15)" : "var(--accent)";
                   e.currentTarget.style.transform = "scale(1)";
                 }}
                 style={{
                   display: "inline-flex",
                   alignItems: "center",
                   gap: "8px",
-                  background: "var(--accent)",
-                  color: "#000",
+                  background: dlState === 'error' ? "rgba(241,94,108,0.15)" : "var(--accent)",
+                  color: dlState === 'error' ? "var(--error)" : "#000",
+                  border: dlState === 'error' ? "1px solid var(--error)" : "none",
                   fontSize: "13px",
                   fontWeight: 700,
                   padding: "9px 18px",
                   borderRadius: "999px",
-                  textDecoration: "none",
+                  cursor: "pointer",
                   transition: "background 0.15s, transform 0.1s",
-                  boxShadow: "0 4px 16px rgba(29,185,84,0.35)",
+                  boxShadow: dlState === 'error' ? "none" : "0 4px 16px rgba(29,185,84,0.35)",
                 }}
               >
-                ↓ Download
-              </a>
+                {dlState === 'error' ? '✕ Download Failed' : '↓ Download'}
+              </button>
             )}
 
             {song.shareable_link && (
               <button
                 onClick={handleCopyShareLink}
                 onMouseEnter={(e) => {
-                  if (!copiedShare)
+                  if (!shareState)
                     e.currentTarget.style.background = "rgba(29,185,84,0.15)";
                 }}
                 onMouseLeave={(e) => {
-                  if (!copiedShare)
+                  if (!shareState)
                     e.currentTarget.style.background = "transparent";
                 }}
                 style={{
-                  background: copiedShare
-                    ? "rgba(29,185,84,0.22)"
-                    : "transparent",
-                  border: "1px solid rgba(29,185,84,0.5)",
-                  color: copiedShare ? "var(--accent)" : "var(--text)",
+                  background: shareState === 'copied' ? "rgba(29,185,84,0.22)" : shareState === 'error' ? "rgba(241,94,108,0.15)" : "transparent",
+                  border: shareState === 'error' ? "1px solid var(--error)" : "1px solid rgba(29,185,84,0.5)",
+                  color: shareState === 'copied' ? "var(--accent)" : shareState === 'error' ? "var(--error)" : "var(--text)",
                   fontSize: "13px",
                   fontWeight: 600,
                   padding: "9px 16px",
@@ -1000,7 +1023,7 @@ function SongDetail() {
                   whiteSpace: "nowrap",
                 }}
               >
-                {copiedShare ? "✓ Copied Link" : "⎘ Share Link"}
+                {shareState === 'copied' ? "✓ Copied Link" : shareState === 'error' ? "✕ Copy Failed" : "⎘ Share Link"}
               </button>
             )}
           </div>

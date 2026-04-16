@@ -216,7 +216,8 @@ function SongRow({
   onDelete,
 }) {
   const [hovered, setHovered] = React.useState(false);
-  const [copied, setCopied] = React.useState(false);
+  const [copyState, setCopyState] = React.useState(null); // null | 'copied' | 'error'
+  const [dlState, setDlState] = React.useState(null);     // null | 'error'
   function calcProgress() {
     const elapsed = (Date.now() - new Date(song.created_at).getTime()) / 1000;
     return Math.min(85, 5 + (elapsed / 120) * 80);
@@ -279,12 +280,40 @@ function SongRow({
     textDecoration: "none",
   };
 
+  async function handleDownload(e) {
+    e.stopPropagation();
+    try {
+      const res = await fetch(song.audio_file);
+      if (!res.ok) throw new Error('Download failed');
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = (song.title || 'song').replace(/[^\w\s-]/g, '') + '.mp3';
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      setDlState('error');
+      setTimeout(() => setDlState(null), 3000);
+    }
+  }
+
   function handleCopyLink(e) {
     e.stopPropagation();
-    navigator.clipboard.writeText(song.shareable_link).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    });
+    if (!song.shareable_link) {
+      setCopyState('error');
+      setTimeout(() => setCopyState(null), 3000);
+      return;
+    }
+    navigator.clipboard.writeText(song.shareable_link)
+      .then(() => {
+        setCopyState('copied');
+        setTimeout(() => setCopyState(null), 2000);
+      })
+      .catch(() => {
+        setCopyState('error');
+        setTimeout(() => setCopyState(null), 3000);
+      });
   }
 
   function handleDeleteClick(e) {
@@ -470,51 +499,57 @@ function SongRow({
 
           {/* Download */}
           {song.audio_file && (
-            <a
-              href={song.audio_file}
-              download
-              title="Download"
-              onClick={(e) => e.stopPropagation()}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = "rgba(255,255,255,0.15)";
-                e.currentTarget.style.color = "var(--text)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = "rgba(255,255,255,0.07)";
-                e.currentTarget.style.color = "var(--text-muted)";
-              }}
-              style={actionBtn}
-            >
-              ↓
-            </a>
-          )}
-
-          {/* Copy link */}
-          {song.shareable_link && (
             <button
-              onClick={handleCopyLink}
-              title={copied ? "Copied!" : "Copy link"}
+              onClick={handleDownload}
+              title={dlState === 'error' ? 'Download failed' : 'Download'}
               onMouseEnter={(e) => {
-                if (!copied) {
+                if (dlState !== 'error') {
                   e.currentTarget.style.background = "rgba(255,255,255,0.15)";
                   e.currentTarget.style.color = "var(--text)";
                 }
               }}
               onMouseLeave={(e) => {
-                if (!copied) {
+                if (dlState !== 'error') {
                   e.currentTarget.style.background = "rgba(255,255,255,0.07)";
                   e.currentTarget.style.color = "var(--text-muted)";
                 }
               }}
               style={{
                 ...actionBtn,
-                background: copied
-                  ? "rgba(29,185,84,0.2)"
-                  : "rgba(255,255,255,0.07)",
-                color: copied ? "var(--accent)" : "var(--text-muted)",
+                background: dlState === 'error' ? "rgba(241,94,108,0.2)" : "rgba(255,255,255,0.07)",
+                color: dlState === 'error' ? "var(--error)" : "var(--text-muted)",
+                borderColor: dlState === 'error' ? "var(--error)" : "rgba(255,255,255,0.1)",
               }}
             >
-              {copied ? "✓" : "⎘"}
+              {dlState === 'error' ? '✕' : '↓'}
+            </button>
+          )}
+
+          {/* Copy link */}
+          {song.shareable_link && (
+            <button
+              onClick={handleCopyLink}
+              title={copyState === 'copied' ? "Copied!" : copyState === 'error' ? "Copy failed" : "Copy link"}
+              onMouseEnter={(e) => {
+                if (!copyState) {
+                  e.currentTarget.style.background = "rgba(255,255,255,0.15)";
+                  e.currentTarget.style.color = "var(--text)";
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!copyState) {
+                  e.currentTarget.style.background = "rgba(255,255,255,0.07)";
+                  e.currentTarget.style.color = "var(--text-muted)";
+                }
+              }}
+              style={{
+                ...actionBtn,
+                background: copyState === 'copied' ? "rgba(29,185,84,0.2)" : copyState === 'error' ? "rgba(241,94,108,0.2)" : "rgba(255,255,255,0.07)",
+                color: copyState === 'copied' ? "var(--accent)" : copyState === 'error' ? "var(--error)" : "var(--text-muted)",
+                borderColor: copyState === 'error' ? "var(--error)" : "rgba(255,255,255,0.1)",
+              }}
+            >
+              {copyState === 'copied' ? "✓" : copyState === 'error' ? "✕" : "⎘"}
             </button>
           )}
 
