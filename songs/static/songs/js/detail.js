@@ -788,6 +788,15 @@ function SongDetail() {
   const [deleting, setDeleting] = React.useState(false);
   const [shareState, setShareState] = React.useState(null); // null | 'copied' | 'error'
   const [dlState, setDlState] = React.useState(null);       // null | 'error'
+  const [showDlMenu, setShowDlMenu] = React.useState(false);
+  const dlMenuRef = React.useRef(null);
+  React.useEffect(() => {
+    function onClickOutside(e) {
+      if (dlMenuRef.current && !dlMenuRef.current.contains(e.target)) setShowDlMenu(false);
+    }
+    document.addEventListener('mousedown', onClickOutside);
+    return () => document.removeEventListener('mousedown', onClickOutside);
+  }, []);
   const [showDeleteConfirm, setShowDeleteConfirm] = React.useState(false);
 
   async function fetchSong() {
@@ -841,7 +850,7 @@ function SongDetail() {
     setShowDeleteConfirm(false);
   }
 
-  async function handleDownload() {
+  async function handleDownload(ext) {
     try {
       const res = await fetch(song.audio_file);
       if (!res.ok) throw new Error('Download failed');
@@ -849,7 +858,7 @@ function SongDetail() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = (song.title || 'song').replace(/[^\w\s-]/g, '') + '.mp3';
+      a.download = (song.title || 'song').replace(/[^\w\s-]/g, '') + '.' + ext;
       a.click();
       URL.revokeObjectURL(url);
     } catch {
@@ -986,36 +995,56 @@ function SongDetail() {
         >
           <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
             {song.audio_file && (
-              <button
-                onClick={handleDownload}
-                onMouseEnter={(e) => {
-                  if (dlState !== 'error') {
-                    e.currentTarget.style.background = "var(--accent-hover)";
-                    e.currentTarget.style.transform = "scale(1.02)";
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = dlState === 'error' ? "rgba(241,94,108,0.15)" : "var(--accent)";
-                  e.currentTarget.style.transform = "scale(1)";
-                }}
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  background: dlState === 'error' ? "rgba(241,94,108,0.15)" : "var(--accent)",
-                  color: dlState === 'error' ? "var(--error)" : "#000",
-                  border: dlState === 'error' ? "1px solid var(--error)" : "none",
-                  fontSize: "13px",
-                  fontWeight: 700,
-                  padding: "9px 18px",
-                  borderRadius: "999px",
-                  cursor: "pointer",
-                  transition: "background 0.15s, transform 0.1s",
-                  boxShadow: dlState === 'error' ? "none" : "0 4px 16px rgba(29,185,84,0.35)",
-                }}
-              >
-                {dlState === 'error' ? '✕ Download Failed' : '↓ Download'}
-              </button>
+              <div ref={dlMenuRef} style={{ position: 'relative', display: 'inline-block' }}>
+                <button
+                  onClick={() => dlState !== 'error' && setShowDlMenu(v => !v)}
+                  onMouseEnter={(e) => {
+                    if (dlState !== 'error') { e.currentTarget.style.background = "var(--accent-hover)"; e.currentTarget.style.transform = "scale(1.02)"; }
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = dlState === 'error' ? "rgba(241,94,108,0.15)" : "var(--accent)";
+                    e.currentTarget.style.transform = "scale(1)";
+                  }}
+                  style={{
+                    display: "inline-flex", alignItems: "center", gap: "8px",
+                    background: dlState === 'error' ? "rgba(241,94,108,0.15)" : "var(--accent)",
+                    color: dlState === 'error' ? "var(--error)" : "#000",
+                    border: dlState === 'error' ? "1px solid var(--error)" : "none",
+                    fontSize: "13px", fontWeight: 700, padding: "9px 18px",
+                    borderRadius: "999px", cursor: "pointer",
+                    transition: "background 0.15s, transform 0.1s",
+                    boxShadow: dlState === 'error' ? "none" : "0 4px 16px rgba(29,185,84,0.35)",
+                  }}
+                >
+                  {dlState === 'error' ? '✕ Download Failed' : '↓ Download ▾'}
+                </button>
+                {showDlMenu && (
+                  <div style={{
+                    position: 'absolute', top: 'calc(100% + 6px)', left: 0,
+                    background: 'var(--surface-2)', border: '1px solid rgba(255,255,255,0.1)',
+                    borderRadius: '10px', overflow: 'hidden', zIndex: 100,
+                    boxShadow: '0 8px 24px rgba(0,0,0,0.4)', minWidth: '130px',
+                  }}>
+                    {['m4a', 'mp3'].map(ext => (
+                      <button
+                        key={ext}
+                        onClick={() => { setShowDlMenu(false); handleDownload(ext); }}
+                        onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
+                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                        style={{
+                          display: 'block', width: '100%', textAlign: 'left',
+                          background: 'transparent', border: 'none',
+                          color: 'var(--text)', fontSize: '13px', fontWeight: 600,
+                          padding: '10px 16px', cursor: 'pointer',
+                          fontFamily: 'var(--font-sans)',
+                        }}
+                      >
+                        ↓ {ext.toUpperCase()}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
             )}
 
             {song.shareable_link && (

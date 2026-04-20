@@ -415,6 +415,20 @@ function SongRow({
   const [hovered, setHovered] = React.useState(false);
   const [copyState, setCopyState] = React.useState(null); // null | 'copied' | 'error'
   const [dlState, setDlState] = React.useState(null); // null | 'error'
+  const [showDlMenu, setShowDlMenu] = React.useState(false);
+  const [dlMenuPos, setDlMenuPos] = React.useState({ top: 0, left: 0 });
+  const dlBtnRef = React.useRef(null);
+  const dlMenuRef = React.useRef(null);
+  React.useEffect(() => {
+    function onClickOutside(e) {
+      if (dlMenuRef.current && !dlMenuRef.current.contains(e.target) &&
+          dlBtnRef.current && !dlBtnRef.current.contains(e.target)) {
+        setShowDlMenu(false);
+      }
+    }
+    document.addEventListener('mousedown', onClickOutside);
+    return () => document.removeEventListener('mousedown', onClickOutside);
+  }, []);
   function calcProgress() {
     const elapsed = (Date.now() - new Date(song.created_at).getTime()) / 1000;
     return Math.min(85, 5 + (elapsed / 120) * 80);
@@ -477,7 +491,7 @@ function SongRow({
     textDecoration: "none",
   };
 
-  async function handleDownload(e) {
+  async function handleDownload(e, ext) {
     e.stopPropagation();
     try {
       const res = await fetch(song.audio_file);
@@ -486,7 +500,7 @@ function SongRow({
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = (song.title || "song").replace(/[^\w\s-]/g, "") + ".mp3";
+      a.download = (song.title || "song").replace(/[^\w\s-]/g, "") + "." + ext;
       a.click();
       URL.revokeObjectURL(url);
     } catch {
@@ -741,37 +755,63 @@ function SongRow({
 
           {/* Download */}
           {song.audio_file && (
-            <button
-              onClick={handleDownload}
-              title={dlState === "error" ? "Download failed" : "Download"}
-              onMouseEnter={(e) => {
-                if (dlState !== "error") {
-                  e.currentTarget.style.background = "rgba(255,255,255,0.15)";
-                  e.currentTarget.style.color = "var(--text)";
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (dlState !== "error") {
-                  e.currentTarget.style.background = "rgba(255,255,255,0.07)";
-                  e.currentTarget.style.color = "var(--text-muted)";
-                }
-              }}
-              style={{
-                ...actionBtn,
-                background:
-                  dlState === "error"
-                    ? "rgba(241,94,108,0.2)"
-                    : "rgba(255,255,255,0.07)",
-                color:
-                  dlState === "error" ? "var(--error)" : "var(--text-muted)",
-                borderColor:
-                  dlState === "error"
-                    ? "var(--error)"
-                    : "rgba(255,255,255,0.1)",
-              }}
-            >
-              {dlState === "error" ? "✕" : "↓"}
-            </button>
+            <React.Fragment>
+              <button
+                ref={dlBtnRef}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (dlState === "error") return;
+                  const rect = dlBtnRef.current.getBoundingClientRect();
+                  setDlMenuPos({ top: rect.bottom + 6, left: rect.right - 110 });
+                  setShowDlMenu(v => !v);
+                }}
+                title={dlState === "error" ? "Download failed" : "Download"}
+                onMouseEnter={(e) => {
+                  if (dlState !== "error") { e.currentTarget.style.background = "rgba(255,255,255,0.15)"; e.currentTarget.style.color = "var(--text)"; }
+                }}
+                onMouseLeave={(e) => {
+                  if (dlState !== "error") { e.currentTarget.style.background = "rgba(255,255,255,0.07)"; e.currentTarget.style.color = "var(--text-muted)"; }
+                }}
+                style={{
+                  ...actionBtn,
+                  background: dlState === "error" ? "rgba(241,94,108,0.2)" : "rgba(255,255,255,0.07)",
+                  color: dlState === "error" ? "var(--error)" : "var(--text-muted)",
+                  borderColor: dlState === "error" ? "var(--error)" : "rgba(255,255,255,0.1)",
+                }}
+              >
+                {dlState === "error" ? "✕" : "↓"}
+              </button>
+              {showDlMenu && ReactDOM.createPortal(
+                <div
+                  ref={dlMenuRef}
+                  style={{
+                    position: 'fixed', top: dlMenuPos.top, left: dlMenuPos.left,
+                    background: 'var(--surface-2)', border: '1px solid rgba(255,255,255,0.1)',
+                    borderRadius: '10px', overflow: 'hidden', zIndex: 9999,
+                    boxShadow: '0 8px 24px rgba(0,0,0,0.4)', minWidth: '110px',
+                  }}
+                >
+                  {['m4a', 'mp3'].map(ext => (
+                    <button
+                      key={ext}
+                      onClick={(e) => { e.stopPropagation(); setShowDlMenu(false); handleDownload(e, ext); }}
+                      onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                      style={{
+                        display: 'block', width: '100%', textAlign: 'left',
+                        background: 'transparent', border: 'none',
+                        color: 'var(--text)', fontSize: '12px', fontWeight: 600,
+                        padding: '9px 14px', cursor: 'pointer',
+                        fontFamily: 'var(--font-sans)',
+                      }}
+                    >
+                      ↓ {ext.toUpperCase()}
+                    </button>
+                  ))}
+                </div>,
+                document.body
+              )}
+            </React.Fragment>
           )}
 
           {/* Copy link */}
