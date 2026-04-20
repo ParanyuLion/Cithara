@@ -168,7 +168,16 @@ function Header() {
             gap: "10px",
           }}
         >
-          <span style={{ fontSize: "23px", lineHeight: 1 }}>♪</span>
+          <img
+            src="/static/songs/images/cithara-logo.png"
+            alt="Cithara logo"
+            style={{
+              width: "30px",
+              height: "30px",
+              objectFit: "contain",
+              display: "block",
+            }}
+          />
           <span
             style={{
               color: "var(--text)",
