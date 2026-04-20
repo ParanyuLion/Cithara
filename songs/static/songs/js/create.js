@@ -526,8 +526,48 @@ function CreateSong() {
 
         {/* Prompt mode toggle */}
         <div>
-          <label style={labelStyle}>Prompt Mode</label>
-          <div style={{ display: "flex", gap: "8px" }}>
+          <label
+            style={{
+              ...labelStyle,
+              textTransform: "uppercase",
+              letterSpacing: "1.1px",
+              fontSize: "11px",
+              color: "var(--text-subdued)",
+              marginBottom: "8px",
+            }}
+          >
+            Prompt Mode
+          </label>
+          <div
+            style={{
+              position: "relative",
+              display: "flex",
+              alignItems: "center",
+              gap: "4px",
+              width: "220px",
+              background: "#17191c",
+              border: "1px solid rgba(255,255,255,0.06)",
+              borderRadius: "11px",
+              padding: "4px",
+              overflow: "hidden",
+            }}
+          >
+            <div
+              style={{
+                position: "absolute",
+                top: "4px",
+                left: promptMode === "lyric" ? "4px" : "calc(50% + 2px)",
+                width: "calc(50% - 6px)",
+                height: "calc(100% - 8px)",
+                borderRadius: "9px",
+                background: "#3a3b40",
+                boxShadow: "0 4px 14px rgba(0,0,0,0.26)",
+                transition:
+                  "left 0.22s cubic-bezier(0.22, 0.61, 0.36, 1), box-shadow 0.22s ease-out",
+                pointerEvents: "none",
+                zIndex: 0,
+              }}
+            />
             {["lyric", "idea"].map((mode) => {
               const active = promptMode === mode;
               return (
@@ -539,19 +579,24 @@ function CreateSong() {
                     setError(null);
                   }}
                   style={{
-                    padding: "6px 18px",
-                    borderRadius: "50px",
-                    border: active ? "none" : "1px solid var(--surface-3)",
-                    background: active ? "var(--accent)" : "transparent",
-                    color: active ? "#060606" : "var(--text-muted)",
+                    position: "relative",
+                    zIndex: 1,
+                    flex: 1,
+                    padding: "8px 10px",
+                    borderRadius: "9px",
+                    border: "none",
+                    background: "transparent",
+                    color: active ? "#ffffff" : "#8f949b",
                     fontFamily: "var(--font-sans)",
                     fontSize: "13px",
                     fontWeight: active ? 700 : 500,
                     cursor: "pointer",
-                    transition: "all 0.15s",
+                    transition:
+                      "color 0.18s ease-out, transform 0.14s ease-out",
+                    transform: active ? "translateY(0)" : "translateY(0.5px)",
                   }}
                 >
-                  {mode === "idea" ? "💡 Idea" : "🎵 Lyric"}
+                  {mode === "idea" ? "Idea mode" : "Lyric mode"}
                 </button>
               );
             })}
