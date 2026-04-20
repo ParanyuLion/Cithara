@@ -542,6 +542,7 @@ function SongRow({
       ocasion: song.ocasion || "",
       singer_voice: song.singer_voice || "",
       prompt: song.prompt || "",
+      prompt_mode: song.prompt_mode || "lyric",
     });
     window.location.href = `/new/?${params.toString()}`;
   }
@@ -629,9 +630,14 @@ function SongRow({
           fontSize: "20px",
           color: "rgba(255,255,255,0.8)",
           boxShadow: "0 4px 12px rgba(0,0,0,0.4)",
+          overflow: "hidden",
+          position: "relative",
         }}
       >
-        ♪
+        {song.cover_image_url
+          ? <img src={song.cover_image_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+          : "♪"
+        }
       </div>
 
       {/* Info */}

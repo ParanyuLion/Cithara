@@ -92,9 +92,11 @@ class SunoClient:
 
         if raw_status == _TERMINAL_SUCCESS:
             suno_data = data.get("response", {}).get("sunoData", [])
-            audio_url = suno_data[0].get("audioUrl", "") if suno_data else ""
-            shareable_link = suno_data[0].get("streamAudioUrl", "") or audio_url
-            return {"status": "SUCCESS", "audio_url": audio_url, "shareable_link": shareable_link}
+            first = suno_data[0] if suno_data else {}
+            audio_url = first.get("audioUrl", "")
+            shareable_link = first.get("streamAudioUrl", "") or audio_url
+            image_url = first.get("imageUrl") or None
+            return {"status": "SUCCESS", "audio_url": audio_url, "shareable_link": shareable_link, "image_url": image_url}
 
         if raw_status in _TERMINAL_FAILURES:
             return {"status": "FAILED", "audio_url": None, "shareable_link": None}

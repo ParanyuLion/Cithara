@@ -28,4 +28,5 @@ class SunoSongGeneratorStrategy(SongGeneratorStrategy):
             status=raw["status"],
             audio_url=raw.get("audio_url"),
             shareable_link=raw.get("shareable_link"),
+            image_url=raw.get("image_url"),
         )

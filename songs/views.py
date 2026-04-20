@@ -51,6 +51,7 @@ def _serialize_song(song: Song, request=None, include_meta: bool = False) -> dic
         "shareable_link": shareable_link,
         "failure_reason": song.failure_reason,
         "prompt_mode": song.prompt_mode,
+        "cover_image_url": song.cover_image_url,
         "created_at": song.created_at.isoformat(),
         "status": song.status,
     }

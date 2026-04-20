@@ -133,12 +133,15 @@ class SongService:
                     track.get("duration", "unknown"),
                 )
             try:
-                audio_url = tracks[0].get("audio_url", "")
+                track = tracks[0]
+                audio_url = track.get("audio_url", "")
+                image_url = track.get("image_url") or None
                 audio_file = self._download_audio(audio_url)
                 self.repository.update_status(
                     song, Status.COMPLETED,
                     shareable_link=audio_url,
                     audio_file=audio_file,
+                    cover_image_url=image_url,
                 )
                 logger.info("Song %d completed via SUNO callback", song.id)
             except Exception as e:

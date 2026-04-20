@@ -218,9 +218,13 @@ function AudioPlayer({ song }) {
             fontSize: "56px",
             color: "rgba(255,255,255,0.75)",
             boxShadow: "0 8px 32px rgba(0,0,0,0.55)",
+            overflow: "hidden",
           }}
         >
-          ♪
+          {song.cover_image_url
+            ? <img src={song.cover_image_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+            : "♪"
+          }
         </div>
 
         {/* Right column */}
@@ -678,6 +682,7 @@ function FailedCard({ song }) {
       ocasion: song.ocasion || "",
       singer_voice: song.singer_voice || "",
       prompt: song.prompt || "",
+      prompt_mode: song.prompt_mode || "lyric",
     });
     return `/new/?${params.toString()}`;
   }
@@ -865,6 +870,19 @@ function SongDetail() {
       setDlState('error');
       setTimeout(() => setDlState(null), 3000);
     }
+  }
+
+  function handleRegenerate() {
+    const params = new URLSearchParams({
+      title: song.title || "",
+      genre: song.genre || "",
+      mood: song.mood || "",
+      ocasion: song.ocasion || "",
+      singer_voice: song.singer_voice || "",
+      prompt: song.prompt || "",
+      prompt_mode: song.prompt_mode || "lyric",
+    });
+    window.location.href = `/new/?${params.toString()}`;
   }
 
   function handleCopyShareLink() {
@@ -1074,6 +1092,26 @@ function SongDetail() {
                 {shareState === 'copied' ? "✓ Copied Link" : shareState === 'error' ? "✕ Copy Failed" : "⎘ Share Link"}
               </button>
             )}
+
+            <button
+              onClick={handleRegenerate}
+              onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.08)"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+              style={{
+                background: "transparent",
+                border: "1px solid var(--surface-3)",
+                color: "var(--text-muted)",
+                fontSize: "13px",
+                fontWeight: 600,
+                padding: "9px 16px",
+                cursor: "pointer",
+                borderRadius: "999px",
+                transition: "background 0.15s, color 0.15s",
+                whiteSpace: "nowrap",
+              }}
+            >
+              ↺ Regenerate
+            </button>
           </div>
 
           <button
