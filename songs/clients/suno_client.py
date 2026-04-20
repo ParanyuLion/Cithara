@@ -26,7 +26,8 @@ class SunoClient:
         self._model = getattr(settings, "SUNO_MODEL", "V4")
         self._callback_url = getattr(settings, "SUNO_CALLBACK_URL", "")
 
-    def generate(self, prompt: str) -> str:
+    def generate(self, prompt: str, custom_mode: bool = False,
+                 style: str = None, title: str = None) -> str:
         """
         Submit a music generation request.
 
@@ -34,11 +35,16 @@ class SunoClient:
         Raises ``requests.HTTPError`` on non-2xx responses.
         """
         payload = {
-            "customMode": False,
+            "customMode": custom_mode,
             "instrumental": False,
             "model": self._model,
             "prompt": prompt,
         }
+        if custom_mode:
+            if style:
+                payload["style"] = style
+            if title:
+                payload["title"] = title
         if self._callback_url:
             payload["callBackUrl"] = self._callback_url
 
@@ -86,9 +92,11 @@ class SunoClient:
 
         if raw_status == _TERMINAL_SUCCESS:
             suno_data = data.get("response", {}).get("sunoData", [])
-            audio_url = suno_data[0].get("audioUrl", "") if suno_data else ""
-            shareable_link = suno_data[0].get("streamAudioUrl", "") or audio_url
-            return {"status": "SUCCESS", "audio_url": audio_url, "shareable_link": shareable_link}
+            first = suno_data[0] if suno_data else {}
+            audio_url = first.get("audioUrl", "")
+            shareable_link = first.get("streamAudioUrl", "") or audio_url
+            image_url = first.get("imageUrl") or None
+            return {"status": "SUCCESS", "audio_url": audio_url, "shareable_link": shareable_link, "image_url": image_url}
 
         if raw_status in _TERMINAL_FAILURES:
             return {"status": "FAILED", "audio_url": None, "shareable_link": None}

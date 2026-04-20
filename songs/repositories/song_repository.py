@@ -46,6 +46,7 @@ class SongRepository:
         suno_task_id: str = None,
         audio_file=None,
         failure_reason: str = None,
+        cover_image_url: str = None,
     ) -> Song:
         """Update the song's status and optionally its media file / link / task ID."""
         update_fields = ["status"]
@@ -66,6 +67,10 @@ class SongRepository:
         if failure_reason is not None:
             song.failure_reason = failure_reason[:500]
             update_fields.append("failure_reason")
+
+        if cover_image_url is not None:
+            song.cover_image_url = cover_image_url
+            update_fields.append("cover_image_url")
 
         song.save(update_fields=update_fields)
         return song

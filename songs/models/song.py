@@ -13,10 +13,19 @@ class Song(models.Model):
     prompt = models.CharField(max_length=1000, blank=True, null=True)
     singer_voice = models.CharField(max_length=100)
 
+    PROMPT_MODE_IDEA = 'idea'
+    PROMPT_MODE_LYRIC = 'lyric'
+    PROMPT_MODE_CHOICES = [(PROMPT_MODE_IDEA, 'Idea'), (PROMPT_MODE_LYRIC, 'Lyric')]
+
+    prompt_mode = models.CharField(
+        max_length=10, choices=PROMPT_MODE_CHOICES, default=PROMPT_MODE_LYRIC
+    )
+
     suno_task_id = models.CharField(max_length=100, blank=True, null=True)
     audio_file = models.FileField(upload_to="songs/", null=True, blank=True)
     shareable_link = models.URLField(max_length=500, blank=True, null=True)
     failure_reason = models.CharField(max_length=500, blank=True, null=True)
+    cover_image_url = models.URLField(max_length=500, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     deleted_at = models.DateTimeField(blank=True, null=True)
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING)

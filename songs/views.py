@@ -50,6 +50,8 @@ def _serialize_song(song: Song, request=None, include_meta: bool = False) -> dic
         "audio_file": song.audio_file.url if song.audio_file else None,
         "shareable_link": shareable_link,
         "failure_reason": song.failure_reason,
+        "prompt_mode": song.prompt_mode,
+        "cover_image_url": song.cover_image_url,
         "created_at": song.created_at.isoformat(),
         "status": song.status,
     }
@@ -91,6 +93,10 @@ def song_create(request):
         if not data.get(field):
             return JsonResponse({"error": f"Missing required field: {field}"}, status=400)
 
+    prompt_mode = data.get("prompt_mode", "lyric")
+    if prompt_mode not in ("idea", "lyric"):
+        return JsonResponse({"error": "prompt_mode must be 'idea' or 'lyric'"}, status=400)
+
     try:
         song = _song_service.create_song(
             title=data["title"],
@@ -100,6 +106,7 @@ def song_create(request):
             singer_voice=data["singer_voice"],
             creator=request.user,
             prompt=data.get("prompt"),
+            prompt_mode=prompt_mode,
         )
         return JsonResponse(
             {"message": "Created", "id": song.id, "title": song.title, "status": song.status},

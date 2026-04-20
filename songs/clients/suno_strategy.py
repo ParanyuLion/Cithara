@@ -14,7 +14,12 @@ class SunoSongGeneratorStrategy(SongGeneratorStrategy):
         self._client = SunoClient()
 
     def generate(self, request: GenerationRequest) -> GenerationResult:
-        task_id = self._client.generate(prompt=request.prompt)
+        task_id = self._client.generate(
+            prompt=request.prompt,
+            custom_mode=request.custom_mode,
+            style=request.style,
+            title=request.title,
+        )
         return GenerationResult(task_id=task_id)
 
     def get_status(self, task_id: str) -> StatusResult:
@@ -23,4 +28,5 @@ class SunoSongGeneratorStrategy(SongGeneratorStrategy):
             status=raw["status"],
             audio_url=raw.get("audio_url"),
             shareable_link=raw.get("shareable_link"),
+            image_url=raw.get("image_url"),
         )

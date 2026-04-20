@@ -8,6 +8,7 @@ class GenerationRequest:
     prompt: str
     style: str = None
     title: str = None
+    custom_mode: bool = False
 
 
 @dataclass
@@ -21,10 +22,12 @@ class GenerationResult:
 class StatusResult:
     """Normalised status returned by get_status()."""
 
-    def __init__(self, status: str, audio_url: str | None = None, shareable_link: str | None = None):
+    def __init__(self, status: str, audio_url: str | None = None,
+                 shareable_link: str | None = None, image_url: str | None = None):
         self.status = status           # "PENDING" | "SUCCESS" | "FAILED"
         self.audio_url = audio_url
         self.shareable_link = shareable_link
+        self.image_url = image_url
 
 
 class SongGeneratorStrategy(ABC):

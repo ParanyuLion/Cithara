@@ -33,14 +33,19 @@ function Field({ label, children }) {
   );
 }
 
+const PROMPT_LIMITS = { idea: 300, lyric: 1000 };
+
 function CreateSong() {
   const [form, setForm] = React.useState({
     title: '', genre: '', mood: '', ocasion: '', singer_voice: '', prompt: '',
   });
+  const [promptMode, setPromptMode]  = React.useState('lyric'); // 'idea' | 'lyric'
   const [step, setStep]              = React.useState('form'); // 'form' | 'confirm'
   const [isRegenerate, setIsRegenerate] = React.useState(false);
   const [error, setError]            = React.useState(null);
   const [submitting, setSubmitting]  = React.useState(false);
+
+  const promptLimit = PROMPT_LIMITS[promptMode];
 
   /* Pre-fill form from URL query params when arriving via Regenerate */
   React.useEffect(() => {
@@ -51,6 +56,7 @@ function CreateSong() {
       const v = params.get(k);
       if (v) prefill[k] = v;
     });
+    if (params.get('prompt_mode') === 'lyric') setPromptMode('lyric');
     if (Object.keys(prefill).length > 0) {
       setForm(prev => ({ ...prev, ...prefill }));
       setIsRegenerate(true);
@@ -68,8 +74,12 @@ function CreateSong() {
   function handleSubmit(e) {
     e.preventDefault();
     setError(null);
-    if (form.prompt.length > 1000) {
-      setError(`Prompt is too long — ${form.prompt.length.toLocaleString()} / 1,000 characters. Please shorten it before continuing.`);
+    if (form.prompt.length > promptLimit) {
+      setError(`Prompt is too long — ${form.prompt.length.toLocaleString()} / ${promptLimit.toLocaleString()} characters. Please shorten it before continuing.`);
+      return;
+    }
+    if (promptMode === 'lyric' && !form.prompt.trim()) {
+      setError('Lyrics are required in Lyric mode. Please write your lyrics or switch to Idea mode.');
       return;
     }
     setStep('confirm');
@@ -88,6 +98,7 @@ function CreateSong() {
       singer_voice: form.singer_voice,
     };
     if (form.prompt.trim()) body.prompt = form.prompt.trim();
+    body.prompt_mode = promptMode;
 
     try {
       const res = await fetch('/songs/create/', {
@@ -126,7 +137,8 @@ function CreateSong() {
     { label: 'Mood',         value: form.mood },
     { label: 'Occasion',     value: form.ocasion },
     { label: 'Singer Voice', value: form.singer_voice },
-    ...(form.prompt.trim() ? [{ label: 'Prompt', value: form.prompt.trim() }] : []),
+    { label: 'Mode',         value: promptMode === 'lyric' ? 'Lyric (customMode)' : 'Idea (auto-generated)' },
+    ...(form.prompt.trim() ? [{ label: promptMode === 'lyric' ? 'Lyrics' : 'Prompt', value: form.prompt.trim() }] : []),
   ];
 
   const wrapPage = content => (
@@ -339,17 +351,54 @@ function CreateSong() {
           </div>
         </div>
 
-        <Field label="Prompt (optional)">
+        {/* Prompt mode toggle */}
+        <div>
+          <label style={labelStyle}>Prompt Mode</label>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            {['lyric', 'idea'].map(mode => {
+              const active = promptMode === mode;
+              return (
+                <button
+                  key={mode}
+                  type="button"
+                  onClick={() => { setPromptMode(mode); setError(null); }}
+                  style={{
+                    padding: '6px 18px',
+                    borderRadius: '50px',
+                    border: active ? 'none' : '1px solid var(--surface-3)',
+                    background: active ? 'var(--accent)' : 'transparent',
+                    color: active ? '#000' : 'var(--text-muted)',
+                    fontFamily: 'var(--font-sans)',
+                    fontSize: '13px',
+                    fontWeight: active ? 700 : 500,
+                    cursor: 'pointer',
+                    transition: 'all 0.15s',
+                  }}
+                >
+                  {mode === 'idea' ? '💡 Idea' : '🎵 Lyric'}
+                </button>
+              );
+            })}
+          </div>
+          <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '6px' }}>
+            {promptMode === 'idea'
+              ? 'Suno will generate lyrics from your idea. Limit: 300 chars.'
+              : 'Provide your own lyrics. Suno will compose music around them. Limit: 1,000 chars.'}
+          </p>
+        </div>
+
+        <Field label={promptMode === 'lyric' ? 'Lyrics *' : 'Prompt (optional)'}>
           <textarea
             name="prompt" value={form.prompt} onChange={handleChange}
-            rows={3}
-            style={{ ...inputStyle, resize: 'vertical', lineHeight: '1.6', borderColor: form.prompt.length > 1000 ? 'var(--error)' : 'transparent' }}
+            rows={promptMode === 'lyric' ? 6 : 3}
+            required={promptMode === 'lyric'}
+            style={{ ...inputStyle, resize: 'vertical', lineHeight: '1.6', borderColor: form.prompt.length > promptLimit ? 'var(--error)' : 'transparent' }}
             onFocus={focusGreen} onBlur={blurRestore}
-            placeholder="Additional instructions for the AI…"
+            placeholder={promptMode === 'lyric' ? 'Write your lyrics here…' : 'Additional instructions for the AI…'}
           />
           <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '4px' }}>
-            <span style={{ fontSize: '11px', color: form.prompt.length > 1000 ? 'var(--error)' : 'var(--text-muted)', fontWeight: form.prompt.length > 1000 ? 600 : 400 }}>
-              {form.prompt.length.toLocaleString()} / 1,000
+            <span style={{ fontSize: '11px', color: form.prompt.length > promptLimit ? 'var(--error)' : 'var(--text-muted)', fontWeight: form.prompt.length > promptLimit ? 600 : 400 }}>
+              {form.prompt.length.toLocaleString()} / {promptLimit.toLocaleString()}
             </span>
           </div>
         </Field>
