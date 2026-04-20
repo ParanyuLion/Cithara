@@ -95,6 +95,9 @@ function SparkleIcon({ active }) {
 function Header() {
   const currentUser = window.CURRENT_USER;
   const path = window.location.pathname;
+  const SIDEBAR_MIN = 240;
+  const SIDEBAR_MAX = 460;
+  const SIDEBAR_STORAGE_KEY = "cithara.sidebar.width";
 
   const displayName =
     (currentUser || "Guest")
@@ -103,6 +106,57 @@ function Header() {
       .replace(/\b\w/g, (c) => c.toUpperCase())
       .trim() || "Guest";
   const avatarText = displayName.charAt(0).toUpperCase() || "G";
+  const [sidebarWidth, setSidebarWidth] = React.useState(() => {
+    const saved = parseInt(localStorage.getItem(SIDEBAR_STORAGE_KEY) || "", 10);
+    if (Number.isFinite(saved)) {
+      return Math.max(SIDEBAR_MIN, Math.min(SIDEBAR_MAX, saved));
+    }
+    const cssWidth = parseInt(
+      getComputedStyle(document.documentElement).getPropertyValue(
+        "--sidebar-width",
+      ),
+      10,
+    );
+    if (Number.isFinite(cssWidth)) {
+      return Math.max(SIDEBAR_MIN, Math.min(SIDEBAR_MAX, cssWidth));
+    }
+    return 330;
+  });
+  const [isResizing, setIsResizing] = React.useState(false);
+  const [isResizeHover, setIsResizeHover] = React.useState(false);
+
+  React.useEffect(() => {
+    document.documentElement.style.setProperty(
+      "--sidebar-width",
+      `${sidebarWidth}px`,
+    );
+    localStorage.setItem(SIDEBAR_STORAGE_KEY, String(sidebarWidth));
+  }, [sidebarWidth]);
+
+  React.useEffect(() => {
+    if (!isResizing) return undefined;
+
+    function handleMouseMove(e) {
+      const next = Math.max(SIDEBAR_MIN, Math.min(SIDEBAR_MAX, e.clientX));
+      setSidebarWidth(next);
+    }
+
+    function handleMouseUp() {
+      setIsResizing(false);
+    }
+
+    document.body.style.userSelect = "none";
+    document.body.style.cursor = "grabbing";
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseup", handleMouseUp);
+
+    return () => {
+      document.body.style.userSelect = "";
+      document.body.style.cursor = "";
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [isResizing]);
 
   function handleSignOut() {
     const form = document.createElement("form");
@@ -145,6 +199,7 @@ function Header() {
         overflow: "hidden",
         padding: "8px",
         gap: "8px",
+        userSelect: isResizing ? "none" : "auto",
       }}
     >
       <div
@@ -360,6 +415,48 @@ function Header() {
           </button>
         </div>
       </div>
+
+      <div
+        style={{
+          position: "absolute",
+          top: "12px",
+          right: "4px",
+          width: "1px",
+          height: "calc(100% - 24px)",
+          background: "rgba(255,255,255,0.92)",
+          opacity: isResizing || isResizeHover ? 1 : 0,
+          transition: "opacity .15s ease-out",
+          transitionBehavior: "normal",
+          transitionDuration: "0.15s",
+          transitionTimingFunction: "ease-out",
+          transitionDelay: "0s",
+          transitionProperty: "opacity",
+          pointerEvents: "none",
+          zIndex: 19,
+          borderRadius: "999px",
+        }}
+      />
+
+      <div
+        onMouseEnter={() => setIsResizeHover(true)}
+        onMouseLeave={() => setIsResizeHover(false)}
+        onMouseDown={(e) => {
+          e.preventDefault();
+          setIsResizeHover(true);
+          setIsResizing(true);
+        }}
+        title="Drag to resize"
+        style={{
+          position: "absolute",
+          top: "12px",
+          right: 0,
+          width: "10px",
+          height: "calc(100% - 24px)",
+          cursor: isResizing ? "grabbing" : "grab",
+          zIndex: 20,
+          background: "transparent",
+        }}
+      />
     </aside>
   );
 }
