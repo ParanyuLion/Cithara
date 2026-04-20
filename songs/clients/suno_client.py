@@ -26,7 +26,8 @@ class SunoClient:
         self._model = getattr(settings, "SUNO_MODEL", "V4")
         self._callback_url = getattr(settings, "SUNO_CALLBACK_URL", "")
 
-    def generate(self, prompt: str) -> str:
+    def generate(self, prompt: str, custom_mode: bool = False,
+                 style: str = None, title: str = None) -> str:
         """
         Submit a music generation request.
 
@@ -34,11 +35,16 @@ class SunoClient:
         Raises ``requests.HTTPError`` on non-2xx responses.
         """
         payload = {
-            "customMode": False,
+            "customMode": custom_mode,
             "instrumental": False,
             "model": self._model,
             "prompt": prompt,
         }
+        if custom_mode:
+            if style:
+                payload["style"] = style
+            if title:
+                payload["title"] = title
         if self._callback_url:
             payload["callBackUrl"] = self._callback_url
 

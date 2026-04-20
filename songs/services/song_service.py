@@ -41,6 +41,7 @@ class SongService:
         singer_voice: str,
         creator,
         prompt: str = None,
+        prompt_mode: str = 'lyric',
     ) -> Song:
         """
         Persist a new Song as PENDING, submit it to SUNO for generation,
@@ -57,6 +58,7 @@ class SongService:
             singer_voice=singer_voice,
             creator=creator,
             prompt=prompt,
+            prompt_mode=prompt_mode,
             status=Status.PENDING,
         )
         song = self.repository.save(song)
@@ -74,13 +76,21 @@ class SongService:
         Never raises — sets status to FAILED on any error.
         """
         try:
-            base_prompt = self._build_prompt(song)
-            prompt = f"{base_prompt}. {song.prompt}" if song.prompt else base_prompt
-            request = GenerationRequest(
-                prompt=prompt,
-                style=song.genre,
-                title=song.title,
-            )
+            if song.prompt_mode == 'lyric':
+                prompt = song.prompt or ''
+                request = GenerationRequest(
+                    prompt=prompt,
+                    style=song.genre,
+                    title=song.title,
+                    custom_mode=True,
+                )
+            else:
+                base_prompt = self._build_prompt(song)
+                prompt = f"{base_prompt}. {song.prompt}" if song.prompt else base_prompt
+                request = GenerationRequest(
+                    prompt=prompt,
+                    custom_mode=False,
+                )
             result = self.generator.generate(request)
 
             if result.audio_url:
