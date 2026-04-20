@@ -18,9 +18,15 @@ function formatRelativeTime(isoString) {
 
 function formatFullDate(isoString) {
   const d = new Date(isoString);
-  return d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })
-    + " at "
-    + d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+  return (
+    d.toLocaleDateString("en-GB", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    }) +
+    " at " +
+    d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })
+  );
 }
 
 function AudioPlayer({ song }) {
@@ -221,10 +227,20 @@ function AudioPlayer({ song }) {
             overflow: "hidden",
           }}
         >
-          {song.cover_image_url
-            ? <img src={song.cover_image_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
-            : "♪"
-          }
+          {song.cover_image_url ? (
+            <img
+              src={song.cover_image_url}
+              alt=""
+              style={{
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+                display: "block",
+              }}
+            />
+          ) : (
+            "♪"
+          )}
         </div>
 
         {/* Right column */}
@@ -354,7 +370,7 @@ function AudioPlayer({ song }) {
                 border: "none",
                 borderRadius: "50%",
                 cursor: "pointer",
-                color: "#000",
+                color: "#060606",
                 fontSize: "16px",
                 display: "flex",
                 alignItems: "center",
@@ -381,7 +397,7 @@ function AudioPlayer({ song }) {
                   border:
                     "1px solid " +
                     (speed !== 1 ? "var(--accent)" : "var(--surface-3)"),
-                  color: speed !== 1 ? "#000" : "var(--text-muted)",
+                  color: speed !== 1 ? "#060606" : "var(--text-muted)",
                   fontFamily: "var(--font-mono)",
                   fontSize: "10px",
                   padding: "3px 10px",
@@ -430,7 +446,7 @@ function AudioPlayer({ song }) {
                         border:
                           "1px solid " +
                           (speed === s ? "var(--accent)" : "transparent"),
-                        color: speed === s ? "#000" : "var(--text-muted)",
+                        color: speed === s ? "#060606" : "var(--text-muted)",
                         fontFamily: "var(--font-mono)",
                         fontSize: "10px",
                         padding: "3px 7px",
@@ -642,10 +658,16 @@ function GeneratingCard({ status, createdAt }) {
             marginBottom: "6px",
           }}
         >
-          {status === "Pending" ? "Queued for generation…" : "Generating your song…"}
+          {status === "Pending"
+            ? "Queued for generation…"
+            : "Generating your song…"}
         </div>
         <div
-          style={{ fontSize: "13px", color: "var(--text-muted)", lineHeight: 1.6 }}
+          style={{
+            fontSize: "13px",
+            color: "var(--text-muted)",
+            lineHeight: 1.6,
+          }}
         >
           This usually takes 1–2 minutes. The page updates automatically.
         </div>
@@ -730,10 +752,14 @@ function FailedCard({ song }) {
           Generation failed
         </div>
         <div
-          style={{ fontSize: "13px", color: "var(--text-muted)", lineHeight: 1.6 }}
+          style={{
+            fontSize: "13px",
+            color: "var(--text-muted)",
+            lineHeight: 1.6,
+          }}
         >
-          Something went wrong while creating this song. You can try regenerating
-          it with the same settings.
+          Something went wrong while creating this song. You can try
+          regenerating it with the same settings.
         </div>
         {song.failure_reason && (
           <div
@@ -792,15 +818,16 @@ function SongDetail() {
   const [error, setError] = React.useState(null);
   const [deleting, setDeleting] = React.useState(false);
   const [shareState, setShareState] = React.useState(null); // null | 'copied' | 'error'
-  const [dlState, setDlState] = React.useState(null);       // null | 'error'
+  const [dlState, setDlState] = React.useState(null); // null | 'error'
   const [showDlMenu, setShowDlMenu] = React.useState(false);
   const dlMenuRef = React.useRef(null);
   React.useEffect(() => {
     function onClickOutside(e) {
-      if (dlMenuRef.current && !dlMenuRef.current.contains(e.target)) setShowDlMenu(false);
+      if (dlMenuRef.current && !dlMenuRef.current.contains(e.target))
+        setShowDlMenu(false);
     }
-    document.addEventListener('mousedown', onClickOutside);
-    return () => document.removeEventListener('mousedown', onClickOutside);
+    document.addEventListener("mousedown", onClickOutside);
+    return () => document.removeEventListener("mousedown", onClickOutside);
   }, []);
   const [showDeleteConfirm, setShowDeleteConfirm] = React.useState(false);
 
@@ -858,16 +885,16 @@ function SongDetail() {
   async function handleDownload(ext) {
     try {
       const res = await fetch(song.audio_file);
-      if (!res.ok) throw new Error('Download failed');
+      if (!res.ok) throw new Error("Download failed");
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
+      const a = document.createElement("a");
       a.href = url;
-      a.download = (song.title || 'song').replace(/[^\w\s-]/g, '') + '.' + ext;
+      a.download = (song.title || "song").replace(/[^\w\s-]/g, "") + "." + ext;
       a.click();
       URL.revokeObjectURL(url);
     } catch {
-      setDlState('error');
+      setDlState("error");
       setTimeout(() => setDlState(null), 3000);
     }
   }
@@ -887,26 +914,43 @@ function SongDetail() {
 
   function handleCopyShareLink() {
     if (!song?.shareable_link) {
-      setShareState('error');
+      setShareState("error");
       setTimeout(() => setShareState(null), 3000);
       return;
     }
     navigator.clipboard
       .writeText(song.shareable_link)
       .then(() => {
-        setShareState('copied');
+        setShareState("copied");
         setTimeout(() => setShareState(null), 2000);
       })
       .catch(() => {
-        setShareState('error');
+        setShareState("error");
         setTimeout(() => setShareState(null), 3000);
       });
   }
 
   const wrapMain = (content) => (
-    <div style={{ display: "flex", minHeight: "100vh" }}>
+    <div
+      style={{
+        display: "flex",
+        height: "100vh",
+        overflow: "hidden",
+        background: "#060606",
+      }}
+    >
       <PageHeader />
-      <main style={{ flex: 1, padding: "40px 48px", overflowY: "auto" }}>
+      <main
+        style={{
+          flex: 1,
+          padding: "40px 48px",
+          overflowY: "auto",
+          background: "var(--bg)",
+          margin: "8px 8px 8px 0",
+          borderRadius: "12px",
+          height: "calc(100vh - 16px)",
+        }}
+      >
         <div style={{ maxWidth: "1100px", width: "100%" }}>
           <a
             href="/"
@@ -998,7 +1042,8 @@ function SongDetail() {
           opacity: 0.6,
         }}
       >
-        {formatFullDate(song.created_at)} · {formatRelativeTime(song.created_at)}
+        {formatFullDate(song.created_at)} ·{" "}
+        {formatRelativeTime(song.created_at)}
       </p>
 
       {(song.audio_file || song.shareable_link) && (
@@ -1013,48 +1058,93 @@ function SongDetail() {
         >
           <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
             {song.audio_file && (
-              <div ref={dlMenuRef} style={{ position: 'relative', display: 'inline-block' }}>
+              <div
+                ref={dlMenuRef}
+                style={{ position: "relative", display: "inline-block" }}
+              >
                 <button
-                  onClick={() => dlState !== 'error' && setShowDlMenu(v => !v)}
+                  onClick={() =>
+                    dlState !== "error" && setShowDlMenu((v) => !v)
+                  }
                   onMouseEnter={(e) => {
-                    if (dlState !== 'error') { e.currentTarget.style.background = "var(--accent-hover)"; e.currentTarget.style.transform = "scale(1.02)"; }
+                    if (dlState !== "error") {
+                      e.currentTarget.style.background = "var(--accent-hover)";
+                      e.currentTarget.style.transform = "scale(1.02)";
+                    }
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.background = dlState === 'error' ? "rgba(241,94,108,0.15)" : "var(--accent)";
+                    e.currentTarget.style.background =
+                      dlState === "error"
+                        ? "rgba(241,94,108,0.15)"
+                        : "var(--accent)";
                     e.currentTarget.style.transform = "scale(1)";
                   }}
                   style={{
-                    display: "inline-flex", alignItems: "center", gap: "8px",
-                    background: dlState === 'error' ? "rgba(241,94,108,0.15)" : "var(--accent)",
-                    color: dlState === 'error' ? "var(--error)" : "#000",
-                    border: dlState === 'error' ? "1px solid var(--error)" : "none",
-                    fontSize: "13px", fontWeight: 700, padding: "9px 18px",
-                    borderRadius: "999px", cursor: "pointer",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    background:
+                      dlState === "error"
+                        ? "rgba(241,94,108,0.15)"
+                        : "var(--accent)",
+                    color: dlState === "error" ? "var(--error)" : "#060606",
+                    border:
+                      dlState === "error" ? "1px solid var(--error)" : "none",
+                    fontSize: "13px",
+                    fontWeight: 700,
+                    padding: "9px 18px",
+                    borderRadius: "999px",
+                    cursor: "pointer",
                     transition: "background 0.15s, transform 0.1s",
-                    boxShadow: dlState === 'error' ? "none" : "0 4px 16px rgba(29,185,84,0.35)",
+                    boxShadow:
+                      dlState === "error"
+                        ? "none"
+                        : "0 4px 16px rgba(29,185,84,0.35)",
                   }}
                 >
-                  {dlState === 'error' ? '✕ Download Failed' : '↓ Download ▾'}
+                  {dlState === "error" ? "✕ Download Failed" : "↓ Download ▾"}
                 </button>
                 {showDlMenu && (
-                  <div style={{
-                    position: 'absolute', top: 'calc(100% + 6px)', left: 0,
-                    background: 'var(--surface-2)', border: '1px solid rgba(255,255,255,0.1)',
-                    borderRadius: '10px', overflow: 'hidden', zIndex: 100,
-                    boxShadow: '0 8px 24px rgba(0,0,0,0.4)', minWidth: '130px',
-                  }}>
-                    {['m4a', 'mp3'].map(ext => (
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: "calc(100% + 6px)",
+                      left: 0,
+                      background: "var(--surface-2)",
+                      border: "1px solid rgba(255,255,255,0.1)",
+                      borderRadius: "10px",
+                      overflow: "hidden",
+                      zIndex: 100,
+                      boxShadow: "0 8px 24px rgba(0,0,0,0.4)",
+                      minWidth: "130px",
+                    }}
+                  >
+                    {["m4a", "mp3"].map((ext) => (
                       <button
                         key={ext}
-                        onClick={() => { setShowDlMenu(false); handleDownload(ext); }}
-                        onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
-                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                        onClick={() => {
+                          setShowDlMenu(false);
+                          handleDownload(ext);
+                        }}
+                        onMouseEnter={(e) =>
+                          (e.currentTarget.style.background =
+                            "rgba(255,255,255,0.08)")
+                        }
+                        onMouseLeave={(e) =>
+                          (e.currentTarget.style.background = "transparent")
+                        }
                         style={{
-                          display: 'block', width: '100%', textAlign: 'left',
-                          background: 'transparent', border: 'none',
-                          color: 'var(--text)', fontSize: '13px', fontWeight: 600,
-                          padding: '10px 16px', cursor: 'pointer',
-                          fontFamily: 'var(--font-sans)',
+                          display: "block",
+                          width: "100%",
+                          textAlign: "left",
+                          background: "transparent",
+                          border: "none",
+                          color: "var(--text)",
+                          fontSize: "13px",
+                          fontWeight: 600,
+                          padding: "10px 16px",
+                          cursor: "pointer",
+                          fontFamily: "var(--font-sans)",
                         }}
                       >
                         ↓ {ext.toUpperCase()}
@@ -1077,9 +1167,22 @@ function SongDetail() {
                     e.currentTarget.style.background = "transparent";
                 }}
                 style={{
-                  background: shareState === 'copied' ? "rgba(29,185,84,0.22)" : shareState === 'error' ? "rgba(241,94,108,0.15)" : "transparent",
-                  border: shareState === 'error' ? "1px solid var(--error)" : "1px solid rgba(29,185,84,0.5)",
-                  color: shareState === 'copied' ? "var(--accent)" : shareState === 'error' ? "var(--error)" : "var(--text)",
+                  background:
+                    shareState === "copied"
+                      ? "rgba(29,185,84,0.22)"
+                      : shareState === "error"
+                        ? "rgba(241,94,108,0.15)"
+                        : "transparent",
+                  border:
+                    shareState === "error"
+                      ? "1px solid var(--error)"
+                      : "1px solid rgba(29,185,84,0.5)",
+                  color:
+                    shareState === "copied"
+                      ? "var(--accent)"
+                      : shareState === "error"
+                        ? "var(--error)"
+                        : "var(--text)",
                   fontSize: "13px",
                   fontWeight: 600,
                   padding: "9px 16px",
@@ -1089,14 +1192,22 @@ function SongDetail() {
                   whiteSpace: "nowrap",
                 }}
               >
-                {shareState === 'copied' ? "✓ Copied Link" : shareState === 'error' ? "✕ Copy Failed" : "⎘ Share Link"}
+                {shareState === "copied"
+                  ? "✓ Copied Link"
+                  : shareState === "error"
+                    ? "✕ Copy Failed"
+                    : "⎘ Share Link"}
               </button>
             )}
 
             <button
               onClick={handleRegenerate}
-              onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.08)"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = "rgba(255,255,255,0.08)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = "transparent";
+              }}
               style={{
                 background: "transparent",
                 border: "1px solid var(--surface-3)",

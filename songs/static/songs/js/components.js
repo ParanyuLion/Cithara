@@ -116,7 +116,6 @@ function Header() {
     document.body.appendChild(form);
     form.submit();
   }
-
   const navItems = [
     {
       label: "My Library",
@@ -135,36 +134,47 @@ function Header() {
   return (
     <aside
       style={{
-        width: "220px",
-        background: "#000",
+        width: "var(--sidebar-width)",
+        background: "#060606",
         display: "flex",
         flexDirection: "column",
         position: "sticky",
         top: 0,
         height: "100vh",
         flexShrink: 0,
-        overflowY: "auto",
+        overflow: "hidden",
+        padding: "8px",
+        gap: "8px",
       }}
     >
-      {/* Logo */}
-      <div style={{ padding: "28px 20px 24px" }}>
+      <div
+        style={{
+          background: "#0f0f10",
+          borderRadius: "10px",
+          padding: "14px 16px",
+          border: "1px solid rgba(255,255,255,0.05)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: "12px",
+        }}
+      >
         <a
           href="/"
           style={{
-            color: "var(--text-muted)",
             textDecoration: "none",
             display: "flex",
             alignItems: "center",
             gap: "10px",
           }}
         >
-          <span style={{ fontSize: "26px", lineHeight: 1 }}>♪</span>
+          <span style={{ fontSize: "23px", lineHeight: 1 }}>♪</span>
           <span
             style={{
               color: "var(--text)",
-              fontSize: "19px",
-              fontWeight: 900,
-              letterSpacing: "-0.5px",
+              fontSize: "18px",
+              fontWeight: 800,
+              letterSpacing: "-0.4px",
             }}
           >
             Cithara
@@ -172,80 +182,87 @@ function Header() {
         </a>
       </div>
 
-      {/* Nav */}
-      <nav style={{ padding: "0 8px", flex: 1 }}>
-        {navItems.map((item) => {
-          const active = item.activeOn(path);
-          const Icon = item.icon;
-          return (
-            <a
-              key={item.href}
-              href={item.href}
-              onMouseEnter={(e) => {
-                if (!active)
-                  e.currentTarget.style.background = "var(--surface-2)";
-              }}
-              onMouseLeave={(e) => {
-                if (!active) e.currentTarget.style.background = "transparent";
-              }}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "14px",
-                padding: "11px 14px",
-                borderRadius: "6px",
-                color: active ? "var(--text)" : "var(--text-muted)",
-                fontWeight: active ? 700 : 500,
-                textDecoration: "none",
-                fontSize: "14px",
-                background: active ? "var(--surface-2)" : "transparent",
-                marginBottom: "2px",
-                transition: "background 0.12s, color 0.12s",
-                position: "relative",
-                overflow: "hidden",
-              }}
-            >
-              <span
-                style={{
-                  position: "absolute",
-                  left: 0,
-                  top: "18%",
-                  bottom: "18%",
-                  width: "3px",
-                  borderRadius: "0 3px 3px 0",
-                  background: "var(--accent)",
-                  opacity: active ? 1 : 0,
-                  transition: "opacity 0.15s",
+      <div
+        style={{
+          background: "#0f0f10",
+          borderRadius: "10px",
+          border: "1px solid rgba(255,255,255,0.05)",
+          flex: 1,
+          minHeight: 0,
+          display: "flex",
+          flexDirection: "column",
+          overflow: "hidden",
+        }}
+      >
+        <nav style={{ padding: "10px 10px 8px", flex: 1 }}>
+          {navItems.map((item) => {
+            const active = item.activeOn(path);
+            const Icon = item.icon;
+            return (
+              <a
+                key={item.href}
+                href={item.href}
+                onMouseEnter={(e) => {
+                  if (!active) {
+                    e.currentTarget.style.background = "rgba(255,255,255,0.08)";
+                  }
                 }}
-              />
-              <span
+                onMouseLeave={(e) => {
+                  if (!active) {
+                    e.currentTarget.style.background = "transparent";
+                  }
+                }}
                 style={{
-                  width: "16px",
-                  height: "16px",
-                  display: "inline-flex",
+                  display: "flex",
                   alignItems: "center",
-                  justifyContent: "center",
+                  gap: "14px",
+                  padding: "11px 14px",
+                  borderRadius: "10px",
+                  color: active ? "var(--text)" : "var(--text-muted)",
+                  fontWeight: active ? 700 : 500,
+                  textDecoration: "none",
+                  fontSize: "14px",
+                  background: active ? "rgba(29,185,84,0.12)" : "transparent",
+                  marginBottom: "4px",
+                  transition: "background 0.12s, color 0.12s",
+                  position: "relative",
+                  overflow: "hidden",
                 }}
               >
-                <Icon active={active} />
-              </span>
-              {item.label}
-            </a>
-          );
-        })}
-      </nav>
+                <span
+                  style={{
+                    position: "absolute",
+                    left: 0,
+                    top: "20%",
+                    bottom: "20%",
+                    width: "3px",
+                    borderRadius: "0 3px 3px 0",
+                    background: "var(--accent)",
+                    opacity: active ? 1 : 0,
+                    transition: "opacity 0.15s",
+                  }}
+                />
+                <span
+                  style={{
+                    width: "16px",
+                    height: "16px",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <Icon active={active} />
+                </span>
+                {item.label}
+              </a>
+            );
+          })}
+        </nav>
 
-      {/* User mini-card */}
-      <div style={{ padding: "16px", borderTop: "1px solid var(--surface-2)" }}>
         <div
           style={{
-            border: "1px solid rgba(255,255,255,0.08)",
-            background:
-              "linear-gradient(145deg, rgba(255,255,255,0.04), rgba(255,255,255,0.015))",
-            borderRadius: "12px",
-            padding: "10px",
-            boxShadow: "0 6px 24px rgba(0,0,0,0.35)",
-            position: "relative",
+            padding: "12px 14px",
+            borderTop: "1px solid rgba(255,255,255,0.06)",
           }}
         >
           <div
@@ -270,13 +287,11 @@ function Header() {
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                boxShadow:
-                  "0 0 0 2px rgba(29,185,84,0.2), 0 4px 12px rgba(29,185,84,0.2)",
               }}
             >
               {avatarText}
             </div>
-            <div style={{ minWidth: 0, flex: 1 }}>
+            <div style={{ minWidth: 0 }}>
               <div
                 style={{
                   color: "var(--text)",
@@ -294,7 +309,6 @@ function Header() {
                 style={{
                   color: "var(--text-muted)",
                   fontSize: "11px",
-                  marginTop: "1px",
                   whiteSpace: "nowrap",
                   overflow: "hidden",
                   textOverflow: "ellipsis",
@@ -316,13 +330,13 @@ function Header() {
             onMouseLeave={(e) => {
               e.currentTarget.style.background = "transparent";
               e.currentTarget.style.color = "var(--text-muted)";
-              e.currentTarget.style.borderColor = "var(--surface-3)";
+              e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)";
             }}
             style={{
               marginTop: "10px",
               width: "100%",
               background: "transparent",
-              border: "1px solid var(--surface-3)",
+              border: "1px solid rgba(255,255,255,0.12)",
               color: "var(--text-muted)",
               fontSize: "12px",
               fontWeight: 600,
@@ -421,13 +435,17 @@ function SongRow({
   const dlMenuRef = React.useRef(null);
   React.useEffect(() => {
     function onClickOutside(e) {
-      if (dlMenuRef.current && !dlMenuRef.current.contains(e.target) &&
-          dlBtnRef.current && !dlBtnRef.current.contains(e.target)) {
+      if (
+        dlMenuRef.current &&
+        !dlMenuRef.current.contains(e.target) &&
+        dlBtnRef.current &&
+        !dlBtnRef.current.contains(e.target)
+      ) {
         setShowDlMenu(false);
       }
     }
-    document.addEventListener('mousedown', onClickOutside);
-    return () => document.removeEventListener('mousedown', onClickOutside);
+    document.addEventListener("mousedown", onClickOutside);
+    return () => document.removeEventListener("mousedown", onClickOutside);
   }, []);
   function calcProgress() {
     const elapsed = (Date.now() - new Date(song.created_at).getTime()) / 1000;
@@ -634,10 +652,20 @@ function SongRow({
           position: "relative",
         }}
       >
-        {song.cover_image_url
-          ? <img src={song.cover_image_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
-          : "♪"
-        }
+        {song.cover_image_url ? (
+          <img
+            src={song.cover_image_url}
+            alt=""
+            style={{
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              display: "block",
+            }}
+          />
+        ) : (
+          "♪"
+        )}
       </div>
 
       {/* Info */}
@@ -768,55 +796,93 @@ function SongRow({
                   e.stopPropagation();
                   if (dlState === "error") return;
                   const rect = dlBtnRef.current.getBoundingClientRect();
-                  setDlMenuPos({ top: rect.bottom + 6, left: rect.right - 110 });
-                  setShowDlMenu(v => !v);
+                  setDlMenuPos({
+                    top: rect.bottom + 6,
+                    left: rect.right - 110,
+                  });
+                  setShowDlMenu((v) => !v);
                 }}
                 title={dlState === "error" ? "Download failed" : "Download"}
                 onMouseEnter={(e) => {
-                  if (dlState !== "error") { e.currentTarget.style.background = "rgba(255,255,255,0.15)"; e.currentTarget.style.color = "var(--text)"; }
+                  if (dlState !== "error") {
+                    e.currentTarget.style.background = "rgba(255,255,255,0.15)";
+                    e.currentTarget.style.color = "var(--text)";
+                  }
                 }}
                 onMouseLeave={(e) => {
-                  if (dlState !== "error") { e.currentTarget.style.background = "rgba(255,255,255,0.07)"; e.currentTarget.style.color = "var(--text-muted)"; }
+                  if (dlState !== "error") {
+                    e.currentTarget.style.background = "rgba(255,255,255,0.07)";
+                    e.currentTarget.style.color = "var(--text-muted)";
+                  }
                 }}
                 style={{
                   ...actionBtn,
-                  background: dlState === "error" ? "rgba(241,94,108,0.2)" : "rgba(255,255,255,0.07)",
-                  color: dlState === "error" ? "var(--error)" : "var(--text-muted)",
-                  borderColor: dlState === "error" ? "var(--error)" : "rgba(255,255,255,0.1)",
+                  background:
+                    dlState === "error"
+                      ? "rgba(241,94,108,0.2)"
+                      : "rgba(255,255,255,0.07)",
+                  color:
+                    dlState === "error" ? "var(--error)" : "var(--text-muted)",
+                  borderColor:
+                    dlState === "error"
+                      ? "var(--error)"
+                      : "rgba(255,255,255,0.1)",
                 }}
               >
                 {dlState === "error" ? "✕" : "↓"}
               </button>
-              {showDlMenu && ReactDOM.createPortal(
-                <div
-                  ref={dlMenuRef}
-                  style={{
-                    position: 'fixed', top: dlMenuPos.top, left: dlMenuPos.left,
-                    background: 'var(--surface-2)', border: '1px solid rgba(255,255,255,0.1)',
-                    borderRadius: '10px', overflow: 'hidden', zIndex: 9999,
-                    boxShadow: '0 8px 24px rgba(0,0,0,0.4)', minWidth: '110px',
-                  }}
-                >
-                  {['m4a', 'mp3'].map(ext => (
-                    <button
-                      key={ext}
-                      onClick={(e) => { e.stopPropagation(); setShowDlMenu(false); handleDownload(e, ext); }}
-                      onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
-                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                      style={{
-                        display: 'block', width: '100%', textAlign: 'left',
-                        background: 'transparent', border: 'none',
-                        color: 'var(--text)', fontSize: '12px', fontWeight: 600,
-                        padding: '9px 14px', cursor: 'pointer',
-                        fontFamily: 'var(--font-sans)',
-                      }}
-                    >
-                      ↓ {ext.toUpperCase()}
-                    </button>
-                  ))}
-                </div>,
-                document.body
-              )}
+              {showDlMenu &&
+                ReactDOM.createPortal(
+                  <div
+                    ref={dlMenuRef}
+                    style={{
+                      position: "fixed",
+                      top: dlMenuPos.top,
+                      left: dlMenuPos.left,
+                      background: "var(--surface-2)",
+                      border: "1px solid rgba(255,255,255,0.1)",
+                      borderRadius: "10px",
+                      overflow: "hidden",
+                      zIndex: 9999,
+                      boxShadow: "0 8px 24px rgba(0,0,0,0.4)",
+                      minWidth: "110px",
+                    }}
+                  >
+                    {["m4a", "mp3"].map((ext) => (
+                      <button
+                        key={ext}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowDlMenu(false);
+                          handleDownload(e, ext);
+                        }}
+                        onMouseEnter={(e) =>
+                          (e.currentTarget.style.background =
+                            "rgba(255,255,255,0.08)")
+                        }
+                        onMouseLeave={(e) =>
+                          (e.currentTarget.style.background = "transparent")
+                        }
+                        style={{
+                          display: "block",
+                          width: "100%",
+                          textAlign: "left",
+                          background: "transparent",
+                          border: "none",
+                          color: "var(--text)",
+                          fontSize: "12px",
+                          fontWeight: 600,
+                          padding: "9px 14px",
+                          cursor: "pointer",
+                          fontFamily: "var(--font-sans)",
+                        }}
+                      >
+                        ↓ {ext.toUpperCase()}
+                      </button>
+                    ))}
+                  </div>,
+                  document.body,
+                )}
             </React.Fragment>
           )}
 

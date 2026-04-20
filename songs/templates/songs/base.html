@@ -1,56 +1,90 @@
 {% load static %}
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{% block title %}Cithara{% endblock %}</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
-  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  <style>
-    :root {
-      --bg:          #121212;
-      --surface:     #181818;
-      --surface-2:   #282828;
-      --surface-3:   #3e3e3e;
-      --accent:      #1DB954;
-      --accent-dim:  rgba(29, 185, 84, 0.15);
-      --accent-hover:#1ed760;
-      --text:        #FFFFFF;
-      --text-muted:  #b3b3b3;
-      --text-subdued:#6a6a6a;
-      --warn:        #ffa42b;
-      --error:       #f15e6c;
-      --font-mono:   'Courier New', Courier, monospace;
-      --font-sans:   'Inter', system-ui, sans-serif;
-    }
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: var(--font-sans);
-      min-height: 100vh;
-    }
-    #root { min-height: 100vh; }
-    select option { background: var(--surface-2); color: var(--text); }
-    ::-webkit-scrollbar { width: 8px; height: 8px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: var(--surface-3); border-radius: 4px; }
-    ::-webkit-scrollbar-thumb:hover { background: #535353; }
-  </style>
-  {% block head %}{% endblock %}
-  <script>
-    window.CURRENT_USER = "{{ request.user.email|escapejs }}";
-    window.CSRF_TOKEN = "{{ csrf_token }}";
-  </script>
-</head>
-<body>
-  <div id="root"></div>
-  <script src="{% static 'songs/js/components.js' %}" type="text/babel" data-presets="react"></script>
-  {% block scripts %}{% endblock %}
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}Cithara{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+      :root {
+        --bg: #121212;
+        --surface: #181818;
+        --surface-2: #282828;
+        --surface-3: #3e3e3e;
+        --sidebar-width: 330px;
+        --accent: #1db954;
+        --accent-dim: rgba(29, 185, 84, 0.15);
+        --accent-hover: #1ed760;
+        --text: #ffffff;
+        --text-muted: #b3b3b3;
+        --text-subdued: #6a6a6a;
+        --warn: #ffa42b;
+        --error: #f15e6c;
+        --font-mono: "Courier New", Courier, monospace;
+        --font-sans: "Inter", system-ui, sans-serif;
+      }
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      @media (max-width: 1080px) {
+        :root {
+          --sidebar-width: 260px;
+        }
+      }
+      body {
+        background: #060606;
+        color: var(--text);
+        font-family: var(--font-sans);
+        min-height: 100vh;
+      }
+      #root {
+        min-height: 100vh;
+      }
+      select option {
+        background: var(--surface-2);
+        color: var(--text);
+      }
+      ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: var(--surface-3);
+        border-radius: 4px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #535353;
+      }
+    </style>
+    {% block head %}{% endblock %}
+    <script>
+      window.CURRENT_USER = "{{ request.user.email|escapejs }}";
+      window.CSRF_TOKEN = "{{ csrf_token }}";
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script
+      src="{% static 'songs/js/components.js' %}"
+      type="text/babel"
+      data-presets="react"
+    ></script>
+    {% block scripts %}{% endblock %}
+  </body>
 </html>
