@@ -1,27 +1,28 @@
 /* Create song page — form that POSTs to /songs/create/ */
 const PageHeader = window.Header;
 
-const GENRES = ['Pop', 'Rock', 'Jazz', 'Hip-Hop', 'Country'];
+const GENRES = ["Pop", "Rock", "Jazz", "Hip-Hop", "Country"];
 
 const inputStyle = {
-  background: 'var(--surface-2)',
-  border: '1px solid transparent',
-  color: 'var(--text)',
-  fontFamily: 'var(--font-sans)',
-  fontSize: '14px',
-  padding: '8px 12px',
-  width: '100%',
-  outline: 'none',
-  borderRadius: '8px',
-  transition: 'border-color 0.15s',
+  background: "#111",
+  border: "1px solid rgba(255,255,255,0.1)",
+  color: "var(--text)",
+  fontFamily: "var(--font-sans)",
+  fontSize: "14px",
+  padding: "10px 14px",
+  width: "100%",
+  outline: "none",
+  borderRadius: "8px",
+  transition: "border-color 0.15s, box-shadow 0.15s",
 };
 
 const labelStyle = {
-  display: 'block',
-  fontSize: '12px',
+  display: "block",
+  fontSize: "12px",
   fontWeight: 600,
-  color: 'var(--text-muted)',
-  marginBottom: '4px',
+  color: "var(--text-muted)",
+  marginBottom: "6px",
+  letterSpacing: "0.02em",
 };
 
 function Field({ label, children }) {
@@ -37,52 +38,145 @@ const PROMPT_LIMITS = { idea: 300, lyric: 1000 };
 
 function CreateSong() {
   const [form, setForm] = React.useState({
-    title: '', genre: '', mood: '', ocasion: '', singer_voice: '', prompt: '',
+    title: "",
+    genre: "",
+    mood: "",
+    ocasion: "",
+    singer_voice: "",
+    prompt: "",
   });
-  const [promptMode, setPromptMode]  = React.useState('lyric'); // 'idea' | 'lyric'
-  const [step, setStep]              = React.useState('form'); // 'form' | 'confirm'
+  const [promptMode, setPromptMode] = React.useState("lyric"); // 'idea' | 'lyric'
+  const [step, setStep] = React.useState("form"); // 'form' | 'confirm'
   const [isRegenerate, setIsRegenerate] = React.useState(false);
-  const [error, setError]            = React.useState(null);
-  const [submitting, setSubmitting]  = React.useState(false);
+  const [error, setError] = React.useState(null);
+  const [submitting, setSubmitting] = React.useState(false);
 
   const promptLimit = PROMPT_LIMITS[promptMode];
+
+  const stepIndicator = (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: "8px",
+        marginBottom: "14px",
+      }}
+    >
+      <div
+        style={{
+          width: "22px",
+          height: "22px",
+          borderRadius: "50%",
+          background: "var(--accent)",
+          color: "#060606",
+          fontSize: "11px",
+          fontWeight: 800,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          flexShrink: 0,
+        }}
+      >
+        1
+      </div>
+      <div
+        style={{
+          width: "28px",
+          height: "1px",
+          background:
+            step === "confirm"
+              ? "var(--accent)"
+              : "rgba(255,255,255,0.14)",
+          transition: "background 0.3s",
+          flexShrink: 0,
+        }}
+      />
+      <div
+        style={{
+          width: "22px",
+          height: "22px",
+          borderRadius: "50%",
+          background: step === "confirm" ? "var(--accent)" : "transparent",
+          border:
+            "2px solid " +
+            (step === "confirm" ? "var(--accent)" : "rgba(255,255,255,0.18)"),
+          color: step === "confirm" ? "#060606" : "var(--text-subdued)",
+          fontSize: "11px",
+          fontWeight: 800,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          flexShrink: 0,
+          transition: "all 0.3s",
+        }}
+      >
+        2
+      </div>
+      <span
+        style={{
+          fontSize: "12px",
+          color: "var(--text-subdued)",
+          marginLeft: "4px",
+        }}
+      >
+        {step === "form" ? "Song details" : "Review & confirm"}
+      </span>
+    </div>
+  );
 
   /* Pre-fill form from URL query params when arriving via Regenerate */
   React.useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const fields = ['title', 'genre', 'mood', 'ocasion', 'singer_voice', 'prompt'];
+    const fields = [
+      "title",
+      "genre",
+      "mood",
+      "ocasion",
+      "singer_voice",
+      "prompt",
+    ];
     const prefill = {};
-    fields.forEach(k => {
+    fields.forEach((k) => {
       const v = params.get(k);
       if (v) prefill[k] = v;
     });
-    if (params.get('prompt_mode') === 'lyric') setPromptMode('lyric');
+    if (params.get("prompt_mode") === "lyric") setPromptMode("lyric");
     if (Object.keys(prefill).length > 0) {
-      setForm(prev => ({ ...prev, ...prefill }));
+      setForm((prev) => ({ ...prev, ...prefill }));
       setIsRegenerate(true);
     }
   }, []);
 
   function handleChange(e) {
-    setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
+    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   }
 
-  function focusGreen(e)  { e.target.style.borderColor = 'var(--accent)'; }
-  function blurRestore(e) { e.target.style.borderColor = 'transparent'; }
+  function focusGreen(e) {
+    e.target.style.borderColor = "var(--accent)";
+    e.target.style.boxShadow = "0 0 0 2px rgba(29,185,84,0.15)";
+  }
+  function blurRestore(e) {
+    e.target.style.borderColor = "rgba(255,255,255,0.1)";
+    e.target.style.boxShadow = "none";
+  }
 
   /* Form submit → show confirm summary instead of calling API */
   function handleSubmit(e) {
     e.preventDefault();
     setError(null);
     if (form.prompt.length > promptLimit) {
-      setError(`Prompt is too long — ${form.prompt.length.toLocaleString()} / ${promptLimit.toLocaleString()} characters. Please shorten it before continuing.`);
+      setError(
+        `Prompt is too long — ${form.prompt.length.toLocaleString()} / ${promptLimit.toLocaleString()} characters. Please shorten it before continuing.`,
+      );
       return;
     }
-    if (promptMode === 'lyric' && !form.prompt.trim()) {
-      setError('Lyrics are required in Lyric mode. Please write your lyrics or switch to Idea mode.');
+    if (promptMode === "lyric" && !form.prompt.trim()) {
+      setError(
+        "Lyrics are required in Lyric mode. Please write your lyrics or switch to Idea mode.",
+      );
       return;
     }
-    setStep('confirm');
+    setStep("confirm");
   }
 
   /* Confirm → call the API */
@@ -91,125 +185,202 @@ function CreateSong() {
     setSubmitting(true);
 
     const body = {
-      title:        form.title,
-      genre:        form.genre,
-      mood:         form.mood,
-      ocasion:      form.ocasion,
+      title: form.title,
+      genre: form.genre,
+      mood: form.mood,
+      ocasion: form.ocasion,
       singer_voice: form.singer_voice,
     };
     if (form.prompt.trim()) body.prompt = form.prompt.trim();
     body.prompt_mode = promptMode;
 
     try {
-      const res = await fetch('/songs/create/', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/songs/create/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
       const data = await res.json();
       if (!res.ok) {
-        if (typeof data.error === 'object') {
-          const fieldLabels = { prompt: 'Prompt', title: 'Title', genre: 'Genre', mood: 'Mood', ocasion: 'Occasion', singer_voice: 'Singer Voice' };
+        if (typeof data.error === "object") {
+          const fieldLabels = {
+            prompt: "Prompt",
+            title: "Title",
+            genre: "Genre",
+            mood: "Mood",
+            ocasion: "Occasion",
+            singer_voice: "Singer Voice",
+          };
           const parts = [];
           for (const [field, msgs] of Object.entries(data.error)) {
             const label = fieldLabels[field] || field;
-            (Array.isArray(msgs) ? msgs : [msgs]).forEach(m => parts.push(`${label}: ${m}`));
+            (Array.isArray(msgs) ? msgs : [msgs]).forEach((m) =>
+              parts.push(`${label}: ${m}`),
+            );
           }
-          setError(parts.join(' · '));
+          setError(parts.join(" · "));
         } else {
           setError(data.error);
         }
-        setStep('form');
+        setStep("form");
       } else {
-        window.location.href = '/';
+        window.location.href = "/";
       }
     } catch {
-      setError('Network error — check the server is running');
-      setStep('form');
+      setError("Network error — check the server is running");
+      setStep("form");
     } finally {
       setSubmitting(false);
     }
   }
 
   const summaryRows = [
-    { label: 'Title',        value: form.title },
-    { label: 'Genre',        value: form.genre },
-    { label: 'Mood',         value: form.mood },
-    { label: 'Occasion',     value: form.ocasion },
-    { label: 'Singer Voice', value: form.singer_voice },
-    { label: 'Mode',         value: promptMode === 'lyric' ? 'Lyric (customMode)' : 'Idea (auto-generated)' },
-    ...(form.prompt.trim() ? [{ label: promptMode === 'lyric' ? 'Lyrics' : 'Prompt', value: form.prompt.trim() }] : []),
+    { label: "Title", value: form.title },
+    { label: "Genre", value: form.genre },
+    { label: "Mood", value: form.mood },
+    { label: "Occasion", value: form.ocasion },
+    { label: "Singer Voice", value: form.singer_voice },
+    {
+      label: "Mode",
+      value:
+        promptMode === "lyric" ? "Lyric (customMode)" : "Idea (auto-generated)",
+    },
+    ...(form.prompt.trim()
+      ? [
+          {
+            label: promptMode === "lyric" ? "Lyrics" : "Prompt",
+            value: form.prompt.trim(),
+          },
+        ]
+      : []),
   ];
 
-  const wrapPage = content => (
-    <div style={{ display: 'flex', minHeight: '100vh' }}>
+  const wrapPage = (content) => (
+    <div
+      style={{
+        display: "flex",
+        height: "100vh",
+        overflow: "hidden",
+        background: "#060606",
+      }}
+    >
       <PageHeader />
-      <main style={{ flex: 1, padding: '20px 40px', overflowY: 'auto' }}>
-        <div style={{ maxWidth: '960px', width: '100%' }}>
-          {content}
-        </div>
+      <main
+        style={{
+          flex: 1,
+          padding: "20px 40px",
+          overflowY: "auto",
+          background: "var(--bg)",
+          margin: "8px 8px 8px 0",
+          borderRadius: "12px",
+          height: "calc(100vh - 16px)",
+        }}
+      >
+        <div style={{ maxWidth: "960px", width: "100%" }}>{content}</div>
       </main>
     </div>
   );
 
   /* ── Confirm screen ─────────────────────────────────────── */
-  if (step === 'confirm') {
+  if (step === "confirm") {
     return wrapPage(
       <React.Fragment>
-        <a href="/"
-          onMouseEnter={e => { e.currentTarget.style.color = 'var(--text)'; }}
-          onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-muted)'; }}
+        <a
+          href="/"
+          onMouseEnter={(e) => {
+            e.currentTarget.style.color = "var(--text)";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.color = "var(--text-muted)";
+          }}
           style={{
-            display: 'inline-flex', alignItems: 'center', gap: '6px',
-            color: 'var(--text-muted)', fontSize: '13px', fontWeight: 500,
-            textDecoration: 'none', marginBottom: '12px', transition: 'color 0.15s',
-          }}>
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "6px",
+            color: "var(--text-muted)",
+            fontSize: "13px",
+            fontWeight: 500,
+            textDecoration: "none",
+            marginBottom: "16px",
+            transition: "color 0.15s",
+          }}
+        >
           ← Back
         </a>
 
-        <h1 style={{ fontSize: '26px', fontWeight: 900, letterSpacing: '-0.5px', marginBottom: '4px' }}>
-          {isRegenerate ? 'Confirm regeneration' : 'Confirm your song'}
+        {stepIndicator}
+
+        <h1
+          style={{
+            fontSize: "26px",
+            fontWeight: 700,
+            letterSpacing: "-0.4px",
+            marginBottom: "4px",
+            fontFamily: "var(--font-display)",
+          }}
+        >
+          {isRegenerate ? "Confirm regeneration" : "Confirm your song"}
         </h1>
-        <p style={{ color: 'var(--text-muted)', fontSize: '13px', marginBottom: '20px' }}>
+        <p
+          style={{
+            color: "var(--text-muted)",
+            fontSize: "13px",
+            marginBottom: "20px",
+          }}
+        >
           {isRegenerate
-            ? 'A new song will be created with these settings. Your previous song stays in the library.'
-            : 'Review the details below before starting AI generation.'}
+            ? "A new song will be created with these settings. Your previous song stays in the library."
+            : "Review the details below before starting AI generation."}
         </p>
 
         {/* Summary card */}
-        <div style={{
-          background: 'var(--surface-2)',
-          border: '1px solid rgba(255,255,255,0.06)',
-          borderRadius: '12px',
-          overflow: 'hidden',
-          marginBottom: '20px',
-          boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
-        }}>
+        <div
+          style={{
+            background: "var(--surface-2)",
+            border: "1px solid rgba(255,255,255,0.06)",
+            borderRadius: "12px",
+            overflow: "hidden",
+            marginBottom: "20px",
+            boxShadow: "0 4px 20px rgba(0,0,0,0.3)",
+          }}
+        >
           {summaryRows.map((row, i) => (
             <div
               key={row.label}
               style={{
-                display: 'flex',
-                alignItems: row.label === 'Prompt' ? 'flex-start' : 'center',
-                gap: '16px',
-                padding: '13px 20px',
-                borderBottom: i < summaryRows.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none',
+                display: "flex",
+                alignItems: row.label === "Prompt" ? "flex-start" : "center",
+                gap: "16px",
+                padding: "13px 20px",
+                borderBottom:
+                  i < summaryRows.length - 1
+                    ? "1px solid rgba(255,255,255,0.05)"
+                    : "none",
               }}
             >
-              <span style={{
-                width: '110px', flexShrink: 0,
-                fontSize: '11px', fontWeight: 700,
-                color: 'var(--text-muted)',
-                textTransform: 'uppercase', letterSpacing: '0.7px',
-                paddingTop: row.label === 'Prompt' ? '2px' : '0',
-              }}>
+              <span
+                style={{
+                  width: "110px",
+                  flexShrink: 0,
+                  fontSize: "11px",
+                  fontWeight: 700,
+                  color: "var(--text-muted)",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.7px",
+                  paddingTop: row.label === "Prompt" ? "2px" : "0",
+                }}
+              >
                 {row.label}
               </span>
-              <span style={{
-                fontSize: '14px', color: 'var(--text)',
-                lineHeight: 1.55, flex: 1,
-                whiteSpace: row.label === 'Prompt' ? 'pre-wrap' : 'normal',
-              }}>
+              <span
+                style={{
+                  fontSize: "14px",
+                  color: "var(--text)",
+                  lineHeight: 1.55,
+                  flex: 1,
+                  whiteSpace: row.label === "Prompt" ? "pre-wrap" : "normal",
+                }}
+              >
                 {row.value}
               </span>
             </div>
@@ -217,30 +388,41 @@ function CreateSong() {
         </div>
 
         {error && (
-          <p style={{ color: 'var(--error)', fontSize: '13px', marginBottom: '12px' }}>
+          <p
+            style={{
+              color: "var(--error)",
+              fontSize: "13px",
+              marginBottom: "12px",
+            }}
+          >
             {error}
           </p>
         )}
 
         {/* Action buttons */}
-        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+        <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
           <button
-            onClick={() => setStep('form')}
+            onClick={() => setStep("form")}
             disabled={submitting}
-            onMouseEnter={e => { if (!submitting) e.currentTarget.style.background = 'var(--surface-3)'; }}
-            onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
+            onMouseEnter={(e) => {
+              if (!submitting)
+                e.currentTarget.style.background = "var(--surface-3)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = "transparent";
+            }}
             style={{
-              background: 'transparent',
-              border: '1px solid var(--surface-3)',
-              color: 'var(--text-muted)',
-              padding: '11px 24px',
-              fontFamily: 'var(--font-sans)',
-              fontSize: '14px',
+              background: "transparent",
+              border: "1px solid var(--surface-3)",
+              color: "var(--text-muted)",
+              padding: "11px 24px",
+              fontFamily: "var(--font-sans)",
+              fontSize: "14px",
               fontWeight: 600,
-              cursor: submitting ? 'not-allowed' : 'pointer',
-              borderRadius: '50px',
+              cursor: submitting ? "not-allowed" : "pointer",
+              borderRadius: "50px",
               opacity: submitting ? 0.5 : 1,
-              transition: 'background 0.15s',
+              transition: "background 0.15s",
             }}
           >
             ← Edit
@@ -249,80 +431,141 @@ function CreateSong() {
           <button
             onClick={handleConfirm}
             disabled={submitting}
-            onMouseEnter={e => { if (!submitting) { e.currentTarget.style.background = 'var(--accent-hover)'; e.currentTarget.style.transform = 'scale(1.02)'; }}}
-            onMouseLeave={e => { e.currentTarget.style.background = submitting ? 'var(--surface-3)' : 'var(--accent)'; e.currentTarget.style.transform = 'scale(1)'; }}
+            onMouseEnter={(e) => {
+              if (!submitting) {
+                e.currentTarget.style.background = "var(--accent-hover)";
+                e.currentTarget.style.transform = "scale(1.02)";
+              }
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = submitting
+                ? "var(--surface-3)"
+                : "var(--accent)";
+              e.currentTarget.style.transform = "scale(1)";
+            }}
             style={{
-              background: submitting ? 'var(--surface-3)' : 'var(--accent)',
-              color: submitting ? 'var(--text-muted)' : '#000',
-              border: 'none',
-              padding: '11px 32px',
-              fontFamily: 'var(--font-sans)',
-              fontSize: '15px',
+              background: submitting ? "var(--surface-3)" : "var(--accent)",
+              color: submitting ? "var(--text-muted)" : "#060606",
+              border: "none",
+              padding: "11px 32px",
+              fontFamily: "var(--font-sans)",
+              fontSize: "15px",
               fontWeight: 700,
-              cursor: submitting ? 'not-allowed' : 'pointer',
-              borderRadius: '50px',
-              boxShadow: submitting ? 'none' : '0 4px 16px rgba(29,185,84,0.35)',
-              transition: 'background 0.15s, transform 0.1s, box-shadow 0.15s',
+              cursor: submitting ? "not-allowed" : "pointer",
+              borderRadius: "50px",
+              boxShadow: submitting
+                ? "none"
+                : "0 4px 16px rgba(29,185,84,0.35)",
+              transition: "background 0.15s, transform 0.1s, box-shadow 0.15s",
             }}
           >
-            {submitting ? 'Generating…' : '✓ Generate Song'}
+            {submitting ? "Generating…" : "✓ Generate Song"}
           </button>
         </div>
-      </React.Fragment>
+      </React.Fragment>,
     );
   }
 
   /* ── Form screen ────────────────────────────────────────── */
   return wrapPage(
     <React.Fragment>
-      <a href="/"
-        onMouseEnter={e => { e.currentTarget.style.color = 'var(--text)'; }}
-        onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-muted)'; }}
+      <a
+        href="/"
+        onMouseEnter={(e) => {
+          e.currentTarget.style.color = "var(--text)";
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.color = "var(--text-muted)";
+        }}
         style={{
-          display: 'inline-flex', alignItems: 'center', gap: '6px',
-          color: 'var(--text-muted)', fontSize: '13px', fontWeight: 500,
-          textDecoration: 'none', marginBottom: '12px', transition: 'color 0.15s',
-        }}>
+          display: "inline-flex",
+          alignItems: "center",
+          gap: "6px",
+          color: "var(--text-muted)",
+          fontSize: "13px",
+          fontWeight: 500,
+          textDecoration: "none",
+          marginBottom: "16px",
+          transition: "color 0.15s",
+        }}
+      >
         ← Back
       </a>
 
-      <h1 style={{ fontSize: '26px', fontWeight: 900, letterSpacing: '-0.5px', marginBottom: '4px' }}>
-        {isRegenerate ? 'Regenerate Song' : 'New Song'}
+      {stepIndicator}
+
+      <h1
+        style={{
+          fontSize: "26px",
+          fontWeight: 700,
+          letterSpacing: "-0.4px",
+          marginBottom: "4px",
+          fontFamily: "var(--font-display)",
+        }}
+      >
+        {isRegenerate ? "Regenerate Song" : "New Song"}
       </h1>
-      <p style={{ color: 'var(--text-muted)', fontSize: '13px', marginBottom: '20px' }}>
+      <p
+        style={{
+          color: "var(--text-muted)",
+          fontSize: "13px",
+          marginBottom: "20px",
+        }}
+      >
         {isRegenerate
-          ? 'Edit the details below — a new song will be created, the old one stays.'
-          : 'Fill in the details and let AI compose your song.'}
+          ? "Edit the details below — a new song will be created, the old one stays."
+          : "Fill in the details and let AI compose your song."}
       </p>
 
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-
+      <form
+        onSubmit={handleSubmit}
+        style={{ display: "flex", flexDirection: "column", gap: "20px" }}
+      >
         <Field label="Title *">
           <input
-            name="title" value={form.title} onChange={handleChange} required
-            style={inputStyle} onFocus={focusGreen} onBlur={blurRestore}
+            name="title"
+            value={form.title}
+            onChange={handleChange}
+            required
+            style={inputStyle}
+            onFocus={focusGreen}
+            onBlur={blurRestore}
             placeholder="My Song"
           />
         </Field>
 
         {/* Genre + Mood */}
-        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-          <div style={{ flex: '1 1 200px', minWidth: 0 }}>
+        <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
+          <div style={{ flex: "1 1 200px", minWidth: 0 }}>
             <Field label="Genre *">
               <select
-                name="genre" value={form.genre} onChange={handleChange} required
-                style={{ ...inputStyle, cursor: 'pointer' }} onFocus={focusGreen} onBlur={blurRestore}
+                name="genre"
+                value={form.genre}
+                onChange={handleChange}
+                required
+                style={{ ...inputStyle, cursor: "pointer" }}
+                onFocus={focusGreen}
+                onBlur={blurRestore}
               >
                 <option value="">Select genre</option>
-                {GENRES.map(g => <option key={g} value={g}>{g}</option>)}
+                {GENRES.map((g) => (
+                  <option key={g} value={g}>
+                    {g}
+                  </option>
+                ))}
               </select>
             </Field>
           </div>
-          <div style={{ flex: '1 1 200px', minWidth: 0 }}>
+          <div style={{ flex: "1 1 200px", minWidth: 0 }}>
             <Field label="Mood *">
               <input
-                name="mood" value={form.mood} onChange={handleChange} required
-                style={inputStyle} onFocus={focusGreen} onBlur={blurRestore}
+                name="mood"
+                value={form.mood}
+                onChange={handleChange}
+                required
+                style={inputStyle}
+                onFocus={focusGreen}
+                onBlur={blurRestore}
                 placeholder="e.g. happy, melancholic, energetic"
               />
             </Field>
@@ -330,21 +573,31 @@ function CreateSong() {
         </div>
 
         {/* Occasion + Singer Voice */}
-        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-          <div style={{ flex: '1 1 200px', minWidth: 0 }}>
+        <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
+          <div style={{ flex: "1 1 200px", minWidth: 0 }}>
             <Field label="Occasion *">
               <input
-                name="ocasion" value={form.ocasion} onChange={handleChange} required
-                style={inputStyle} onFocus={focusGreen} onBlur={blurRestore}
+                name="ocasion"
+                value={form.ocasion}
+                onChange={handleChange}
+                required
+                style={inputStyle}
+                onFocus={focusGreen}
+                onBlur={blurRestore}
                 placeholder="e.g. birthday, wedding, road trip"
               />
             </Field>
           </div>
-          <div style={{ flex: '1 1 200px', minWidth: 0 }}>
+          <div style={{ flex: "1 1 200px", minWidth: 0 }}>
             <Field label="Singer Voice *">
               <input
-                name="singer_voice" value={form.singer_voice} onChange={handleChange} required
-                style={inputStyle} onFocus={focusGreen} onBlur={blurRestore}
+                name="singer_voice"
+                value={form.singer_voice}
+                onChange={handleChange}
+                required
+                style={inputStyle}
+                onFocus={focusGreen}
+                onBlur={blurRestore}
                 placeholder="e.g. female, male, deep baritone"
               />
             </Field>
@@ -353,87 +606,177 @@ function CreateSong() {
 
         {/* Prompt mode toggle */}
         <div>
-          <label style={labelStyle}>Prompt Mode</label>
-          <div style={{ display: 'flex', gap: '8px' }}>
-            {['lyric', 'idea'].map(mode => {
+          <label
+            style={{
+              ...labelStyle,
+              textTransform: "uppercase",
+              letterSpacing: "1.1px",
+              fontSize: "11px",
+              color: "var(--text-subdued)",
+              marginBottom: "8px",
+            }}
+          >
+            Prompt Mode
+          </label>
+          <div
+            style={{
+              position: "relative",
+              display: "flex",
+              alignItems: "center",
+              gap: "4px",
+              width: "220px",
+              background: "#17191c",
+              border: "1px solid rgba(255,255,255,0.06)",
+              borderRadius: "11px",
+              padding: "4px",
+              overflow: "hidden",
+            }}
+          >
+            <div
+              style={{
+                position: "absolute",
+                top: "4px",
+                left: promptMode === "lyric" ? "4px" : "calc(50% + 2px)",
+                width: "calc(50% - 6px)",
+                height: "calc(100% - 8px)",
+                borderRadius: "9px",
+                background: "#3a3b40",
+                boxShadow: "0 4px 14px rgba(0,0,0,0.26)",
+                transition:
+                  "left 0.22s cubic-bezier(0.22, 0.61, 0.36, 1), box-shadow 0.22s ease-out",
+                pointerEvents: "none",
+                zIndex: 0,
+              }}
+            />
+            {["lyric", "idea"].map((mode) => {
               const active = promptMode === mode;
               return (
                 <button
                   key={mode}
                   type="button"
-                  onClick={() => { setPromptMode(mode); setError(null); }}
+                  onClick={() => {
+                    setPromptMode(mode);
+                    setError(null);
+                  }}
                   style={{
-                    padding: '6px 18px',
-                    borderRadius: '50px',
-                    border: active ? 'none' : '1px solid var(--surface-3)',
-                    background: active ? 'var(--accent)' : 'transparent',
-                    color: active ? '#000' : 'var(--text-muted)',
-                    fontFamily: 'var(--font-sans)',
-                    fontSize: '13px',
+                    position: "relative",
+                    zIndex: 1,
+                    flex: 1,
+                    padding: "8px 10px",
+                    borderRadius: "9px",
+                    border: "none",
+                    background: "transparent",
+                    color: active ? "#ffffff" : "#8f949b",
+                    fontFamily: "var(--font-sans)",
+                    fontSize: "13px",
                     fontWeight: active ? 700 : 500,
-                    cursor: 'pointer',
-                    transition: 'all 0.15s',
+                    cursor: "pointer",
+                    transition:
+                      "color 0.18s ease-out, transform 0.14s ease-out",
+                    transform: active ? "translateY(0)" : "translateY(0.5px)",
                   }}
                 >
-                  {mode === 'idea' ? '💡 Idea' : '🎵 Lyric'}
+                  {mode === "idea" ? "Idea mode" : "Lyric mode"}
                 </button>
               );
             })}
           </div>
-          <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '6px' }}>
-            {promptMode === 'idea'
-              ? 'Suno will generate lyrics from your idea. Limit: 300 chars.'
-              : 'Provide your own lyrics. Suno will compose music around them. Limit: 1,000 chars.'}
+          <p
+            style={{
+              fontSize: "11px",
+              color: "var(--text-muted)",
+              marginTop: "6px",
+            }}
+          >
+            {promptMode === "idea"
+              ? "Suno will generate lyrics from your idea. Limit: 300 chars."
+              : "Provide your own lyrics. Suno will compose music around them. Limit: 1,000 chars."}
           </p>
         </div>
 
-        <Field label={promptMode === 'lyric' ? 'Lyrics *' : 'Prompt (optional)'}>
+        <Field
+          label={promptMode === "lyric" ? "Lyrics *" : "Prompt (optional)"}
+        >
           <textarea
-            name="prompt" value={form.prompt} onChange={handleChange}
-            rows={promptMode === 'lyric' ? 6 : 3}
-            required={promptMode === 'lyric'}
-            style={{ ...inputStyle, resize: 'vertical', lineHeight: '1.6', borderColor: form.prompt.length > promptLimit ? 'var(--error)' : 'transparent' }}
-            onFocus={focusGreen} onBlur={blurRestore}
-            placeholder={promptMode === 'lyric' ? 'Write your lyrics here…' : 'Additional instructions for the AI…'}
+            name="prompt"
+            value={form.prompt}
+            onChange={handleChange}
+            rows={promptMode === "lyric" ? 6 : 3}
+            required={promptMode === "lyric"}
+            style={{
+              ...inputStyle,
+              resize: "vertical",
+              lineHeight: "1.6",
+              borderColor:
+                form.prompt.length > promptLimit
+                  ? "var(--error)"
+                  : "rgba(255,255,255,0.1)",
+            }}
+            onFocus={focusGreen}
+            onBlur={blurRestore}
+            placeholder={
+              promptMode === "lyric"
+                ? "Write your lyrics here…"
+                : "Additional instructions for the AI…"
+            }
           />
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '4px' }}>
-            <span style={{ fontSize: '11px', color: form.prompt.length > promptLimit ? 'var(--error)' : 'var(--text-muted)', fontWeight: form.prompt.length > promptLimit ? 600 : 400 }}>
-              {form.prompt.length.toLocaleString()} / {promptLimit.toLocaleString()}
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "flex-end",
+              marginTop: "4px",
+            }}
+          >
+            <span
+              style={{
+                fontSize: "11px",
+                color:
+                  form.prompt.length > promptLimit
+                    ? "var(--error)"
+                    : "var(--text-muted)",
+                fontWeight: form.prompt.length > promptLimit ? 600 : 400,
+              }}
+            >
+              {form.prompt.length.toLocaleString()} /{" "}
+              {promptLimit.toLocaleString()}
             </span>
           </div>
         </Field>
 
         {error && (
-          <p style={{ color: 'var(--error)', fontSize: '13px' }}>
-            {error}
-          </p>
+          <p style={{ color: "var(--error)", fontSize: "13px" }}>{error}</p>
         )}
 
         <div>
           <button
             type="submit"
             style={{
-              background: 'var(--accent)',
-              color: '#000',
-              border: 'none',
-              padding: '11px 32px',
-              fontFamily: 'var(--font-sans)',
-              fontSize: '15px',
+              background: "var(--accent)",
+              color: "#060606",
+              border: "none",
+              padding: "11px 32px",
+              fontFamily: "var(--font-sans)",
+              fontSize: "15px",
               fontWeight: 700,
-              cursor: 'pointer',
-              borderRadius: '50px',
-              transition: 'background 0.15s, transform 0.1s',
+              cursor: "pointer",
+              borderRadius: "50px",
+              transition: "background 0.15s, transform 0.1s",
             }}
-            onMouseEnter={e => { e.currentTarget.style.background = 'var(--accent-hover)'; e.currentTarget.style.transform = 'scale(1.02)'; }}
-            onMouseLeave={e => { e.currentTarget.style.background = 'var(--accent)'; e.currentTarget.style.transform = 'scale(1)'; }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = "var(--accent-hover)";
+              e.currentTarget.style.transform = "scale(1.02)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = "var(--accent)";
+              e.currentTarget.style.transform = "scale(1)";
+            }}
           >
-            {isRegenerate ? 'Regenerate →' : 'Create Song →'}
+            {isRegenerate ? "Regenerate →" : "Create Song →"}
           </button>
         </div>
-
       </form>
-    </React.Fragment>
+    </React.Fragment>,
   );
 }
 
-ReactDOM.createRoot(document.getElementById('root')).render(<CreateSong />);
+ReactDOM.createRoot(document.getElementById("root")).render(<CreateSong />);

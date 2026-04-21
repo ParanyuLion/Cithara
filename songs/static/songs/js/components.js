@@ -1,5 +1,21 @@
 /* Shared React components — exported to window.* for cross-script access. */
 
+(function () {
+  if (document.getElementById("cithara-styles")) return;
+  const s = document.createElement("style");
+  s.id = "cithara-styles";
+  s.textContent = [
+    "@keyframes ceq1{0%,100%{height:3px}50%{height:12px}}",
+    "@keyframes ceq2{0%,100%{height:10px}50%{height:3px}}",
+    "@keyframes ceq3{0%,100%{height:6px}50%{height:14px}}",
+    "@keyframes cithara-spin{to{transform:rotate(360deg)}}",
+    "@keyframes rowIn{from{opacity:0}to{opacity:1}}",
+    "@keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}",
+    "@keyframes slideUp{from{transform:translateY(100%);opacity:0}to{transform:translateY(0);opacity:1}}",
+  ].join("");
+  document.head.appendChild(s);
+})();
+
 function LibraryIcon({ active }) {
   return (
     <svg
@@ -95,6 +111,9 @@ function SparkleIcon({ active }) {
 function Header() {
   const currentUser = window.CURRENT_USER;
   const path = window.location.pathname;
+  const SIDEBAR_MIN = 240;
+  const SIDEBAR_MAX = 460;
+  const SIDEBAR_STORAGE_KEY = "cithara.sidebar.width";
 
   const displayName =
     (currentUser || "Guest")
@@ -103,6 +122,57 @@ function Header() {
       .replace(/\b\w/g, (c) => c.toUpperCase())
       .trim() || "Guest";
   const avatarText = displayName.charAt(0).toUpperCase() || "G";
+  const [sidebarWidth, setSidebarWidth] = React.useState(() => {
+    const saved = parseInt(localStorage.getItem(SIDEBAR_STORAGE_KEY) || "", 10);
+    if (Number.isFinite(saved)) {
+      return Math.max(SIDEBAR_MIN, Math.min(SIDEBAR_MAX, saved));
+    }
+    const cssWidth = parseInt(
+      getComputedStyle(document.documentElement).getPropertyValue(
+        "--sidebar-width",
+      ),
+      10,
+    );
+    if (Number.isFinite(cssWidth)) {
+      return Math.max(SIDEBAR_MIN, Math.min(SIDEBAR_MAX, cssWidth));
+    }
+    return 330;
+  });
+  const [isResizing, setIsResizing] = React.useState(false);
+  const [isResizeHover, setIsResizeHover] = React.useState(false);
+
+  React.useEffect(() => {
+    document.documentElement.style.setProperty(
+      "--sidebar-width",
+      `${sidebarWidth}px`,
+    );
+    localStorage.setItem(SIDEBAR_STORAGE_KEY, String(sidebarWidth));
+  }, [sidebarWidth]);
+
+  React.useEffect(() => {
+    if (!isResizing) return undefined;
+
+    function handleMouseMove(e) {
+      const next = Math.max(SIDEBAR_MIN, Math.min(SIDEBAR_MAX, e.clientX));
+      setSidebarWidth(next);
+    }
+
+    function handleMouseUp() {
+      setIsResizing(false);
+    }
+
+    document.body.style.userSelect = "none";
+    document.body.style.cursor = "grabbing";
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseup", handleMouseUp);
+
+    return () => {
+      document.body.style.userSelect = "";
+      document.body.style.cursor = "";
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [isResizing]);
 
   function handleSignOut() {
     const form = document.createElement("form");
@@ -116,7 +186,6 @@ function Header() {
     document.body.appendChild(form);
     form.submit();
   }
-
   const navItems = [
     {
       label: "My Library",
@@ -135,36 +204,58 @@ function Header() {
   return (
     <aside
       style={{
-        width: "220px",
-        background: "#000",
+        width: "var(--sidebar-width)",
+        background: "#060606",
         display: "flex",
         flexDirection: "column",
         position: "sticky",
         top: 0,
         height: "100vh",
         flexShrink: 0,
-        overflowY: "auto",
+        overflow: "hidden",
+        padding: "8px",
+        gap: "8px",
+        userSelect: isResizing ? "none" : "auto",
       }}
     >
-      {/* Logo */}
-      <div style={{ padding: "28px 20px 24px" }}>
+      <div
+        style={{
+          background: "#0f0f10",
+          borderRadius: "10px",
+          padding: "14px 16px",
+          border: "1px solid rgba(255,255,255,0.05)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: "12px",
+        }}
+      >
         <a
           href="/"
           style={{
-            color: "var(--text-muted)",
             textDecoration: "none",
             display: "flex",
             alignItems: "center",
             gap: "10px",
           }}
         >
-          <span style={{ fontSize: "26px", lineHeight: 1 }}>♪</span>
+          <img
+            src="/static/songs/images/cithara-logo.png"
+            alt="Cithara logo"
+            style={{
+              width: "30px",
+              height: "30px",
+              objectFit: "contain",
+              display: "block",
+            }}
+          />
           <span
             style={{
               color: "var(--text)",
-              fontSize: "19px",
-              fontWeight: 900,
-              letterSpacing: "-0.5px",
+              fontSize: "18px",
+              fontWeight: 800,
+              letterSpacing: "-0.3px",
+              fontFamily: "var(--font-display)",
             }}
           >
             Cithara
@@ -172,80 +263,87 @@ function Header() {
         </a>
       </div>
 
-      {/* Nav */}
-      <nav style={{ padding: "0 8px", flex: 1 }}>
-        {navItems.map((item) => {
-          const active = item.activeOn(path);
-          const Icon = item.icon;
-          return (
-            <a
-              key={item.href}
-              href={item.href}
-              onMouseEnter={(e) => {
-                if (!active)
-                  e.currentTarget.style.background = "var(--surface-2)";
-              }}
-              onMouseLeave={(e) => {
-                if (!active) e.currentTarget.style.background = "transparent";
-              }}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "14px",
-                padding: "11px 14px",
-                borderRadius: "6px",
-                color: active ? "var(--text)" : "var(--text-muted)",
-                fontWeight: active ? 700 : 500,
-                textDecoration: "none",
-                fontSize: "14px",
-                background: active ? "var(--surface-2)" : "transparent",
-                marginBottom: "2px",
-                transition: "background 0.12s, color 0.12s",
-                position: "relative",
-                overflow: "hidden",
-              }}
-            >
-              <span
-                style={{
-                  position: "absolute",
-                  left: 0,
-                  top: "18%",
-                  bottom: "18%",
-                  width: "3px",
-                  borderRadius: "0 3px 3px 0",
-                  background: "var(--accent)",
-                  opacity: active ? 1 : 0,
-                  transition: "opacity 0.15s",
+      <div
+        style={{
+          background: "#0f0f10",
+          borderRadius: "10px",
+          border: "1px solid rgba(255,255,255,0.05)",
+          flex: 1,
+          minHeight: 0,
+          display: "flex",
+          flexDirection: "column",
+          overflow: "hidden",
+        }}
+      >
+        <nav style={{ padding: "10px 10px 8px", flex: 1 }}>
+          {navItems.map((item) => {
+            const active = item.activeOn(path);
+            const Icon = item.icon;
+            return (
+              <a
+                key={item.href}
+                href={item.href}
+                onMouseEnter={(e) => {
+                  if (!active) {
+                    e.currentTarget.style.background = "rgba(255,255,255,0.08)";
+                  }
                 }}
-              />
-              <span
+                onMouseLeave={(e) => {
+                  if (!active) {
+                    e.currentTarget.style.background = "transparent";
+                  }
+                }}
                 style={{
-                  width: "16px",
-                  height: "16px",
-                  display: "inline-flex",
+                  display: "flex",
                   alignItems: "center",
-                  justifyContent: "center",
+                  gap: "14px",
+                  padding: "11px 14px",
+                  borderRadius: "10px",
+                  color: active ? "var(--text)" : "var(--text-muted)",
+                  fontWeight: active ? 700 : 500,
+                  textDecoration: "none",
+                  fontSize: "14px",
+                  background: active ? "rgba(29,185,84,0.12)" : "transparent",
+                  marginBottom: "4px",
+                  transition: "background 0.12s, color 0.12s",
+                  position: "relative",
+                  overflow: "hidden",
                 }}
               >
-                <Icon active={active} />
-              </span>
-              {item.label}
-            </a>
-          );
-        })}
-      </nav>
+                <span
+                  style={{
+                    position: "absolute",
+                    left: 0,
+                    top: "20%",
+                    bottom: "20%",
+                    width: "3px",
+                    borderRadius: "0 3px 3px 0",
+                    background: "var(--accent)",
+                    opacity: active ? 1 : 0,
+                    transition: "opacity 0.15s",
+                  }}
+                />
+                <span
+                  style={{
+                    width: "16px",
+                    height: "16px",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <Icon active={active} />
+                </span>
+                {item.label}
+              </a>
+            );
+          })}
+        </nav>
 
-      {/* User mini-card */}
-      <div style={{ padding: "16px", borderTop: "1px solid var(--surface-2)" }}>
         <div
           style={{
-            border: "1px solid rgba(255,255,255,0.08)",
-            background:
-              "linear-gradient(145deg, rgba(255,255,255,0.04), rgba(255,255,255,0.015))",
-            borderRadius: "12px",
-            padding: "10px",
-            boxShadow: "0 6px 24px rgba(0,0,0,0.35)",
-            position: "relative",
+            padding: "12px 14px",
+            borderTop: "1px solid rgba(255,255,255,0.06)",
           }}
         >
           <div
@@ -270,13 +368,11 @@ function Header() {
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                boxShadow:
-                  "0 0 0 2px rgba(29,185,84,0.2), 0 4px 12px rgba(29,185,84,0.2)",
               }}
             >
               {avatarText}
             </div>
-            <div style={{ minWidth: 0, flex: 1 }}>
+            <div style={{ minWidth: 0 }}>
               <div
                 style={{
                   color: "var(--text)",
@@ -294,7 +390,6 @@ function Header() {
                 style={{
                   color: "var(--text-muted)",
                   fontSize: "11px",
-                  marginTop: "1px",
                   whiteSpace: "nowrap",
                   overflow: "hidden",
                   textOverflow: "ellipsis",
@@ -316,13 +411,13 @@ function Header() {
             onMouseLeave={(e) => {
               e.currentTarget.style.background = "transparent";
               e.currentTarget.style.color = "var(--text-muted)";
-              e.currentTarget.style.borderColor = "var(--surface-3)";
+              e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)";
             }}
             style={{
               marginTop: "10px",
               width: "100%",
               background: "transparent",
-              border: "1px solid var(--surface-3)",
+              border: "1px solid rgba(255,255,255,0.12)",
               color: "var(--text-muted)",
               fontSize: "12px",
               fontWeight: 600,
@@ -337,6 +432,48 @@ function Header() {
           </button>
         </div>
       </div>
+
+      <div
+        style={{
+          position: "absolute",
+          top: "12px",
+          right: "4px",
+          width: "1px",
+          height: "calc(100% - 24px)",
+          background: "rgba(255,255,255,0.92)",
+          opacity: isResizing || isResizeHover ? 1 : 0,
+          transition: "opacity .15s ease-out",
+          transitionBehavior: "normal",
+          transitionDuration: "0.15s",
+          transitionTimingFunction: "ease-out",
+          transitionDelay: "0s",
+          transitionProperty: "opacity",
+          pointerEvents: "none",
+          zIndex: 19,
+          borderRadius: "999px",
+        }}
+      />
+
+      <div
+        onMouseEnter={() => setIsResizeHover(true)}
+        onMouseLeave={() => setIsResizeHover(false)}
+        onMouseDown={(e) => {
+          e.preventDefault();
+          setIsResizeHover(true);
+          setIsResizing(true);
+        }}
+        title="Drag to resize"
+        style={{
+          position: "absolute",
+          top: "12px",
+          right: 0,
+          width: "10px",
+          height: "calc(100% - 24px)",
+          cursor: isResizing ? "grabbing" : "grab",
+          zIndex: 20,
+          background: "transparent",
+        }}
+      />
     </aside>
   );
 }
@@ -421,13 +558,17 @@ function SongRow({
   const dlMenuRef = React.useRef(null);
   React.useEffect(() => {
     function onClickOutside(e) {
-      if (dlMenuRef.current && !dlMenuRef.current.contains(e.target) &&
-          dlBtnRef.current && !dlBtnRef.current.contains(e.target)) {
+      if (
+        dlMenuRef.current &&
+        !dlMenuRef.current.contains(e.target) &&
+        dlBtnRef.current &&
+        !dlBtnRef.current.contains(e.target)
+      ) {
         setShowDlMenu(false);
       }
     }
-    document.addEventListener('mousedown', onClickOutside);
-    return () => document.removeEventListener('mousedown', onClickOutside);
+    document.addEventListener("mousedown", onClickOutside);
+    return () => document.removeEventListener("mousedown", onClickOutside);
   }, []);
   function calcProgress() {
     const elapsed = (Date.now() - new Date(song.created_at).getTime()) / 1000;
@@ -441,18 +582,6 @@ function SongRow({
     const id = setInterval(() => setFakeProgress(calcProgress()), 900);
     return () => clearInterval(id);
   }, [song.status]);
-
-  React.useEffect(() => {
-    if (document.getElementById("cithara-eq-style")) return;
-    const s = document.createElement("style");
-    s.id = "cithara-eq-style";
-    s.textContent = [
-      "@keyframes ceq1{0%,100%{height:3px}50%{height:12px}}",
-      "@keyframes ceq2{0%,100%{height:10px}50%{height:3px}}",
-      "@keyframes ceq3{0%,100%{height:6px}50%{height:14px}}",
-    ].join("");
-    document.head.appendChild(s);
-  }, []);
 
   const thumbGradients = {
     Completed: "linear-gradient(135deg,#1DB954 0%,#0d7a3a 100%)",
@@ -579,6 +708,7 @@ function SongRow({
         userSelect: "none",
         position: "relative",
         overflow: "hidden",
+        animation: index !== undefined ? `rowIn 0.35s ease ${Math.min(index * 0.055, 0.44).toFixed(3)}s both` : undefined,
       }}
     >
       {/* Index — click to play/pause without navigating to detail */}
@@ -634,10 +764,20 @@ function SongRow({
           position: "relative",
         }}
       >
-        {song.cover_image_url
-          ? <img src={song.cover_image_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
-          : "♪"
-        }
+        {song.cover_image_url ? (
+          <img
+            src={song.cover_image_url}
+            alt=""
+            style={{
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              display: "block",
+            }}
+          />
+        ) : (
+          "♪"
+        )}
       </div>
 
       {/* Info */}
@@ -768,55 +908,93 @@ function SongRow({
                   e.stopPropagation();
                   if (dlState === "error") return;
                   const rect = dlBtnRef.current.getBoundingClientRect();
-                  setDlMenuPos({ top: rect.bottom + 6, left: rect.right - 110 });
-                  setShowDlMenu(v => !v);
+                  setDlMenuPos({
+                    top: rect.bottom + 6,
+                    left: rect.right - 110,
+                  });
+                  setShowDlMenu((v) => !v);
                 }}
                 title={dlState === "error" ? "Download failed" : "Download"}
                 onMouseEnter={(e) => {
-                  if (dlState !== "error") { e.currentTarget.style.background = "rgba(255,255,255,0.15)"; e.currentTarget.style.color = "var(--text)"; }
+                  if (dlState !== "error") {
+                    e.currentTarget.style.background = "rgba(255,255,255,0.15)";
+                    e.currentTarget.style.color = "var(--text)";
+                  }
                 }}
                 onMouseLeave={(e) => {
-                  if (dlState !== "error") { e.currentTarget.style.background = "rgba(255,255,255,0.07)"; e.currentTarget.style.color = "var(--text-muted)"; }
+                  if (dlState !== "error") {
+                    e.currentTarget.style.background = "rgba(255,255,255,0.07)";
+                    e.currentTarget.style.color = "var(--text-muted)";
+                  }
                 }}
                 style={{
                   ...actionBtn,
-                  background: dlState === "error" ? "rgba(241,94,108,0.2)" : "rgba(255,255,255,0.07)",
-                  color: dlState === "error" ? "var(--error)" : "var(--text-muted)",
-                  borderColor: dlState === "error" ? "var(--error)" : "rgba(255,255,255,0.1)",
+                  background:
+                    dlState === "error"
+                      ? "rgba(241,94,108,0.2)"
+                      : "rgba(255,255,255,0.07)",
+                  color:
+                    dlState === "error" ? "var(--error)" : "var(--text-muted)",
+                  borderColor:
+                    dlState === "error"
+                      ? "var(--error)"
+                      : "rgba(255,255,255,0.1)",
                 }}
               >
                 {dlState === "error" ? "✕" : "↓"}
               </button>
-              {showDlMenu && ReactDOM.createPortal(
-                <div
-                  ref={dlMenuRef}
-                  style={{
-                    position: 'fixed', top: dlMenuPos.top, left: dlMenuPos.left,
-                    background: 'var(--surface-2)', border: '1px solid rgba(255,255,255,0.1)',
-                    borderRadius: '10px', overflow: 'hidden', zIndex: 9999,
-                    boxShadow: '0 8px 24px rgba(0,0,0,0.4)', minWidth: '110px',
-                  }}
-                >
-                  {['m4a', 'mp3'].map(ext => (
-                    <button
-                      key={ext}
-                      onClick={(e) => { e.stopPropagation(); setShowDlMenu(false); handleDownload(e, ext); }}
-                      onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
-                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                      style={{
-                        display: 'block', width: '100%', textAlign: 'left',
-                        background: 'transparent', border: 'none',
-                        color: 'var(--text)', fontSize: '12px', fontWeight: 600,
-                        padding: '9px 14px', cursor: 'pointer',
-                        fontFamily: 'var(--font-sans)',
-                      }}
-                    >
-                      ↓ {ext.toUpperCase()}
-                    </button>
-                  ))}
-                </div>,
-                document.body
-              )}
+              {showDlMenu &&
+                ReactDOM.createPortal(
+                  <div
+                    ref={dlMenuRef}
+                    style={{
+                      position: "fixed",
+                      top: dlMenuPos.top,
+                      left: dlMenuPos.left,
+                      background: "var(--surface-2)",
+                      border: "1px solid rgba(255,255,255,0.1)",
+                      borderRadius: "10px",
+                      overflow: "hidden",
+                      zIndex: 9999,
+                      boxShadow: "0 8px 24px rgba(0,0,0,0.4)",
+                      minWidth: "110px",
+                    }}
+                  >
+                    {["m4a", "mp3"].map((ext) => (
+                      <button
+                        key={ext}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowDlMenu(false);
+                          handleDownload(e, ext);
+                        }}
+                        onMouseEnter={(e) =>
+                          (e.currentTarget.style.background =
+                            "rgba(255,255,255,0.08)")
+                        }
+                        onMouseLeave={(e) =>
+                          (e.currentTarget.style.background = "transparent")
+                        }
+                        style={{
+                          display: "block",
+                          width: "100%",
+                          textAlign: "left",
+                          background: "transparent",
+                          border: "none",
+                          color: "var(--text)",
+                          fontSize: "12px",
+                          fontWeight: 600,
+                          padding: "9px 14px",
+                          cursor: "pointer",
+                          fontFamily: "var(--font-sans)",
+                        }}
+                      >
+                        ↓ {ext.toUpperCase()}
+                      </button>
+                    ))}
+                  </div>,
+                  document.body,
+                )}
             </React.Fragment>
           )}
 
@@ -863,7 +1041,13 @@ function SongRow({
                     : "rgba(255,255,255,0.1)",
               }}
             >
-              {copyState === "copied" ? "✓" : copyState === "error" ? "✕" : "⎘"}
+              {copyState === "copied" ? "✓" : copyState === "error" ? "✕" : (
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
+                  <polyline points="16 6 12 2 8 6"/>
+                  <line x1="12" y1="2" x2="12" y2="15"/>
+                </svg>
+              )}
             </button>
           )}
 
@@ -943,8 +1127,261 @@ function SongRow({
   );
 }
 
+function SkeletonRow() {
+  return (
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns: "32px 52px 1fr auto",
+        alignItems: "center",
+        gap: "14px",
+        padding: "10px 14px",
+        borderRadius: "10px",
+        background: "var(--surface-2)",
+        border: "1px solid rgba(255,255,255,0.05)",
+        position: "relative",
+        overflow: "hidden",
+      }}
+    >
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          background:
+            "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.045) 50%, transparent 100%)",
+          animation: "shimmer 1.7s ease-in-out infinite",
+          pointerEvents: "none",
+        }}
+      />
+      <div
+        style={{
+          width: "13px",
+          height: "13px",
+          borderRadius: "3px",
+          background: "rgba(255,255,255,0.07)",
+          margin: "0 auto",
+        }}
+      />
+      <div
+        style={{
+          width: "52px",
+          height: "52px",
+          borderRadius: "6px",
+          background: "rgba(255,255,255,0.07)",
+        }}
+      />
+      <div>
+        <div
+          style={{
+            height: "14px",
+            width: "44%",
+            borderRadius: "4px",
+            background: "rgba(255,255,255,0.09)",
+            marginBottom: "8px",
+          }}
+        />
+        <div
+          style={{
+            height: "11px",
+            width: "31%",
+            borderRadius: "4px",
+            background: "rgba(255,255,255,0.06)",
+          }}
+        />
+      </div>
+      <div
+        style={{
+          height: "22px",
+          width: "70px",
+          borderRadius: "50px",
+          background: "rgba(255,255,255,0.07)",
+        }}
+      />
+    </div>
+  );
+}
+
+function SkeletonDetail() {
+  return (
+    <div style={{ position: "relative", overflow: "hidden" }}>
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          background:
+            "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.045) 50%, transparent 100%)",
+          animation: "shimmer 1.7s ease-in-out infinite",
+          pointerEvents: "none",
+          zIndex: 1,
+        }}
+      />
+      <div
+        style={{
+          width: "56px",
+          height: "13px",
+          borderRadius: "4px",
+          background: "rgba(255,255,255,0.07)",
+          marginBottom: "32px",
+        }}
+      />
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "flex-start",
+          marginBottom: "10px",
+          gap: "16px",
+        }}
+      >
+        <div
+          style={{
+            height: "36px",
+            width: "52%",
+            borderRadius: "6px",
+            background: "rgba(255,255,255,0.1)",
+          }}
+        />
+        <div
+          style={{
+            height: "22px",
+            width: "72px",
+            borderRadius: "50px",
+            background: "rgba(255,255,255,0.07)",
+            flexShrink: 0,
+          }}
+        />
+      </div>
+      <div
+        style={{
+          height: "14px",
+          width: "30%",
+          borderRadius: "4px",
+          background: "rgba(255,255,255,0.07)",
+          marginBottom: "6px",
+        }}
+      />
+      <div
+        style={{
+          height: "12px",
+          width: "20%",
+          borderRadius: "4px",
+          background: "rgba(255,255,255,0.05)",
+          marginBottom: "40px",
+        }}
+      />
+      <div
+        style={{
+          background: "var(--surface-2)",
+          borderRadius: "16px",
+          padding: "24px",
+          marginBottom: "32px",
+          border: "1px solid rgba(255,255,255,0.06)",
+          display: "flex",
+          gap: "24px",
+          alignItems: "flex-start",
+        }}
+      >
+        <div
+          style={{
+            width: "160px",
+            height: "160px",
+            borderRadius: "12px",
+            background: "rgba(255,255,255,0.08)",
+            flexShrink: 0,
+          }}
+        />
+        <div
+          style={{
+            flex: 1,
+            display: "flex",
+            flexDirection: "column",
+            gap: "14px",
+          }}
+        >
+          <div>
+            <div
+              style={{
+                height: "18px",
+                width: "40%",
+                borderRadius: "4px",
+                background: "rgba(255,255,255,0.1)",
+                marginBottom: "6px",
+              }}
+            />
+            <div
+              style={{
+                height: "13px",
+                width: "25%",
+                borderRadius: "4px",
+                background: "rgba(255,255,255,0.07)",
+              }}
+            />
+          </div>
+          <div
+            style={{
+              height: "64px",
+              borderRadius: "6px",
+              background: "rgba(255,255,255,0.05)",
+            }}
+          />
+          <div
+            style={{
+              height: "4px",
+              borderRadius: "2px",
+              background: "rgba(255,255,255,0.07)",
+            }}
+          />
+          <div style={{ display: "flex", gap: "16px", alignItems: "center" }}>
+            <div
+              style={{
+                width: "44px",
+                height: "44px",
+                borderRadius: "50%",
+                background: "rgba(255,255,255,0.1)",
+              }}
+            />
+            <div
+              style={{
+                height: "22px",
+                width: "64px",
+                borderRadius: "4px",
+                background: "rgba(255,255,255,0.07)",
+              }}
+            />
+          </div>
+        </div>
+      </div>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "20px 32px" }}>
+        {[1, 2, 3, 4].map((i) => (
+          <div key={i} style={{ flex: "1 1 110px" }}>
+            <div
+              style={{
+                height: "10px",
+                width: "50%",
+                borderRadius: "3px",
+                background: "rgba(255,255,255,0.07)",
+                marginBottom: "6px",
+              }}
+            />
+            <div
+              style={{
+                height: "15px",
+                width: "70%",
+                borderRadius: "4px",
+                background: "rgba(255,255,255,0.09)",
+              }}
+            />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 /* Export to window so page scripts can access them. */
 window.Header = Header;
 window.StatusBadge = StatusBadge;
 window.SongRow = SongRow;
+window.SkeletonRow = SkeletonRow;
+window.SkeletonDetail = SkeletonDetail;
 window.SPEEDS = SPEEDS;
