@@ -1,6 +1,7 @@
 /* Song detail page — fetches GET /songs/:id/ and displays all fields */
 const PageHeader = window.Header;
 const PageStatusBadge = window.StatusBadge;
+const PageSkeletonDetail = window.SkeletonDetail;
 
 function formatRelativeTime(isoString) {
   const diff = Date.now() - new Date(isoString).getTime();
@@ -473,16 +474,31 @@ function AudioPlayer({ song }) {
                 minWidth: "140px",
               }}
             >
-              <span
-                style={{
-                  color: "var(--text-muted)",
-                  fontSize: "11px",
-                  fontWeight: 600,
-                  flexShrink: 0,
-                }}
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                style={{ color: "var(--text-muted)", flexShrink: 0 }}
               >
-                Vol
-              </span>
+                <path d="M11 5L6 9H2v6h4l5 4V5z" fill="currentColor" />
+                {volume > 0.5 && (
+                  <path
+                    d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                  />
+                )}
+                {volume > 0 && volume <= 0.5 && (
+                  <path
+                    d="M15.54 8.46a5 5 0 0 1 0 7.07"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                  />
+                )}
+              </svg>
               <input
                 type="range"
                 min="0"
@@ -515,91 +531,6 @@ function AudioPlayer({ song }) {
   );
 }
 
-function ShareableLink({ url }) {
-  const [copied, setCopied] = React.useState(false);
-
-  function handleCopy() {
-    navigator.clipboard.writeText(url).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    });
-  }
-
-  return (
-    <div style={{ marginBottom: "28px" }}>
-      <div
-        style={{
-          fontSize: "11px",
-          fontWeight: 600,
-          color: "var(--text-muted)",
-          textTransform: "uppercase",
-          letterSpacing: "0.8px",
-          marginBottom: "8px",
-        }}
-      >
-        Shareable Link
-      </div>
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          background: "var(--surface-3)",
-          border: "1px solid rgba(255,255,255,0.08)",
-          borderRadius: "8px",
-          overflow: "hidden",
-        }}
-      >
-        <input
-          value={url}
-          readOnly
-          onClick={(e) => e.target.select()}
-          style={{
-            flex: 1,
-            background: "transparent",
-            border: "none",
-            color: "var(--text-muted)",
-            fontSize: "12px",
-            fontFamily: "var(--font-mono)",
-            padding: "10px 14px",
-            outline: "none",
-            minWidth: 0,
-          }}
-        />
-        <button
-          onClick={handleCopy}
-          onMouseEnter={(e) => {
-            if (!copied) {
-              e.currentTarget.style.background = "rgba(29,185,84,0.15)";
-              e.currentTarget.style.color = "var(--accent)";
-            }
-          }}
-          onMouseLeave={(e) => {
-            if (!copied) {
-              e.currentTarget.style.background = "transparent";
-              e.currentTarget.style.color = "var(--text-muted)";
-            }
-          }}
-          style={{
-            flexShrink: 0,
-            background: copied ? "rgba(29,185,84,0.2)" : "transparent",
-            border: "none",
-            borderLeft: "1px solid rgba(255,255,255,0.08)",
-            color: copied ? "var(--accent)" : "var(--text-muted)",
-            fontSize: "12px",
-            fontWeight: 600,
-            padding: "10px 16px",
-            cursor: "pointer",
-            transition: "background 0.15s, color 0.15s",
-            whiteSpace: "nowrap",
-          }}
-        >
-          {copied ? "✓ Copied" : "⎘ Copy"}
-        </button>
-      </div>
-    </div>
-  );
-}
-
 function GeneratingCard({ status, createdAt }) {
   function calcProgress() {
     const elapsed = (Date.now() - new Date(createdAt).getTime()) / 1000;
@@ -607,16 +538,6 @@ function GeneratingCard({ status, createdAt }) {
   }
 
   const [progress, setProgress] = React.useState(calcProgress);
-
-  React.useEffect(() => {
-    if (!document.getElementById("cithara-spin-style")) {
-      const s = document.createElement("style");
-      s.id = "cithara-spin-style";
-      s.textContent =
-        "@keyframes cithara-spin { to { transform: rotate(360deg); } }";
-      document.head.appendChild(s);
-    }
-  }, []);
 
   React.useEffect(() => {
     const id = setInterval(() => setProgress(calcProgress()), 900);
@@ -980,10 +901,7 @@ function SongDetail() {
     </div>
   );
 
-  if (loading)
-    return wrapMain(
-      <p style={{ color: "var(--text-muted)", fontSize: "14px" }}>Loading…</p>,
-    );
+  if (loading) return wrapMain(<PageSkeletonDetail />);
 
   if (error)
     return wrapMain(
@@ -998,7 +916,12 @@ function SongDetail() {
     letterSpacing: "0.8px",
     marginBottom: "4px",
   };
-  const fieldValue = { color: "var(--text)", fontSize: "15px" };
+  const fieldValue = {
+    color: "var(--text)",
+    fontSize: "15px",
+    wordBreak: "break-word",
+    overflowWrap: "anywhere",
+  };
 
   return wrapMain(
     <React.Fragment>
@@ -1015,10 +938,14 @@ function SongDetail() {
         <h1
           style={{
             fontSize: "36px",
-            fontWeight: 900,
+            fontWeight: 700,
             lineHeight: 1.1,
-            letterSpacing: "-0.5px",
+            letterSpacing: "-0.4px",
             flex: 1,
+            minWidth: 0,
+            wordBreak: "break-word",
+            overflowWrap: "anywhere",
+            fontFamily: "var(--font-display)",
           }}
         >
           {song.title}
@@ -1196,7 +1123,16 @@ function SongDetail() {
                   ? "✓ Copied Link"
                   : shareState === "error"
                     ? "✕ Copy Failed"
-                    : "⎘ Share Link"}
+                    : (
+                    <React.Fragment>
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                        <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
+                        <polyline points="16 6 12 2 8 6"/>
+                        <line x1="12" y1="2" x2="12" y2="15"/>
+                      </svg>
+                      Share Link
+                    </React.Fragment>
+                  )}
               </button>
             )}
 
@@ -1316,6 +1252,8 @@ function SongDetail() {
                   color: "var(--text-muted)",
                   fontSize: "14px",
                   lineHeight: 1.7,
+                  wordBreak: "break-word",
+                  overflowWrap: "anywhere",
                 }}
               >
                 {song.prompt}

@@ -1,6 +1,7 @@
 /* Song list page — fetches GET /songs/ and renders player rows */
 const PageHeader = window.Header;
 const PageSongRow = window.SongRow;
+const PageSkeletonRow = window.SkeletonRow;
 
 function FunnelIcon({ active }) {
   return (
@@ -296,6 +297,7 @@ function NowPlayingBar({
         gap: "20px",
         zIndex: 100,
         backdropFilter: "blur(12px)",
+        animation: "slideUp 0.3s cubic-bezier(0.25,0.46,0.45,0.94) both",
       }}
     >
       {/* Cover + song info */}
@@ -708,6 +710,30 @@ function SongList() {
     return () => clearInterval(timer);
   }, [songs]);
 
+  React.useEffect(() => {
+    function onKey(e) {
+      const tag = document.activeElement?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+      if (e.key === " " || e.key === "Spacebar") {
+        e.preventDefault();
+        if (nowPlaying) {
+          const a = audioRef.current;
+          if (!a) return;
+          if (playing) { a.pause(); setPlaying(false); }
+          else { a.play(); setPlaying(true); }
+        }
+      } else if (e.key === "ArrowRight") {
+        e.preventDefault();
+        handleNext();
+      } else if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        handlePrev();
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [nowPlaying, playing, songs]);
+
   // Filtered list
   const filtered = React.useMemo(() => {
     const q = query.toLowerCase().trim();
@@ -860,9 +886,10 @@ function SongList() {
           <h1
             style={{
               fontSize: "32px",
-              fontWeight: 900,
+              fontWeight: 800,
               letterSpacing: "-0.5px",
               marginBottom: "4px",
+              fontFamily: "var(--font-display)",
             }}
           >
             My Library
@@ -1072,9 +1099,11 @@ function SongList() {
 
         {/* States */}
         {loading && (
-          <p style={{ color: "var(--text-muted)", fontSize: "14px" }}>
-            Loading…
-          </p>
+          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+            {[...Array(6)].map((_, i) => (
+              <PageSkeletonRow key={i} />
+            ))}
+          </div>
         )}
         {error && (
           <p style={{ color: "var(--error)", fontSize: "14px" }}>

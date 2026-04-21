@@ -4,16 +4,16 @@ const PageHeader = window.Header;
 const GENRES = ["Pop", "Rock", "Jazz", "Hip-Hop", "Country"];
 
 const inputStyle = {
-  background: "var(--surface-2)",
-  border: "1px solid transparent",
+  background: "#111",
+  border: "1px solid rgba(255,255,255,0.1)",
   color: "var(--text)",
   fontFamily: "var(--font-sans)",
   fontSize: "14px",
-  padding: "8px 12px",
+  padding: "10px 14px",
   width: "100%",
   outline: "none",
   borderRadius: "8px",
-  transition: "border-color 0.15s",
+  transition: "border-color 0.15s, box-shadow 0.15s",
 };
 
 const labelStyle = {
@@ -21,7 +21,8 @@ const labelStyle = {
   fontSize: "12px",
   fontWeight: 600,
   color: "var(--text-muted)",
-  marginBottom: "4px",
+  marginBottom: "6px",
+  letterSpacing: "0.02em",
 };
 
 function Field({ label, children }) {
@@ -52,6 +53,77 @@ function CreateSong() {
 
   const promptLimit = PROMPT_LIMITS[promptMode];
 
+  const stepIndicator = (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: "8px",
+        marginBottom: "14px",
+      }}
+    >
+      <div
+        style={{
+          width: "22px",
+          height: "22px",
+          borderRadius: "50%",
+          background: "var(--accent)",
+          color: "#060606",
+          fontSize: "11px",
+          fontWeight: 800,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          flexShrink: 0,
+        }}
+      >
+        1
+      </div>
+      <div
+        style={{
+          width: "28px",
+          height: "1px",
+          background:
+            step === "confirm"
+              ? "var(--accent)"
+              : "rgba(255,255,255,0.14)",
+          transition: "background 0.3s",
+          flexShrink: 0,
+        }}
+      />
+      <div
+        style={{
+          width: "22px",
+          height: "22px",
+          borderRadius: "50%",
+          background: step === "confirm" ? "var(--accent)" : "transparent",
+          border:
+            "2px solid " +
+            (step === "confirm" ? "var(--accent)" : "rgba(255,255,255,0.18)"),
+          color: step === "confirm" ? "#060606" : "var(--text-subdued)",
+          fontSize: "11px",
+          fontWeight: 800,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          flexShrink: 0,
+          transition: "all 0.3s",
+        }}
+      >
+        2
+      </div>
+      <span
+        style={{
+          fontSize: "12px",
+          color: "var(--text-subdued)",
+          marginLeft: "4px",
+        }}
+      >
+        {step === "form" ? "Song details" : "Review & confirm"}
+      </span>
+    </div>
+  );
+
   /* Pre-fill form from URL query params when arriving via Regenerate */
   React.useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -81,9 +153,11 @@ function CreateSong() {
 
   function focusGreen(e) {
     e.target.style.borderColor = "var(--accent)";
+    e.target.style.boxShadow = "0 0 0 2px rgba(29,185,84,0.15)";
   }
   function blurRestore(e) {
-    e.target.style.borderColor = "transparent";
+    e.target.style.borderColor = "rgba(255,255,255,0.1)";
+    e.target.style.boxShadow = "none";
   }
 
   /* Form submit → show confirm summary instead of calling API */
@@ -227,19 +301,22 @@ function CreateSong() {
             fontSize: "13px",
             fontWeight: 500,
             textDecoration: "none",
-            marginBottom: "12px",
+            marginBottom: "16px",
             transition: "color 0.15s",
           }}
         >
           ← Back
         </a>
 
+        {stepIndicator}
+
         <h1
           style={{
             fontSize: "26px",
-            fontWeight: 900,
-            letterSpacing: "-0.5px",
+            fontWeight: 700,
+            letterSpacing: "-0.4px",
             marginBottom: "4px",
+            fontFamily: "var(--font-display)",
           }}
         >
           {isRegenerate ? "Confirm regeneration" : "Confirm your song"}
@@ -408,19 +485,22 @@ function CreateSong() {
           fontSize: "13px",
           fontWeight: 500,
           textDecoration: "none",
-          marginBottom: "12px",
+          marginBottom: "16px",
           transition: "color 0.15s",
         }}
       >
         ← Back
       </a>
 
+      {stepIndicator}
+
       <h1
         style={{
           fontSize: "26px",
-          fontWeight: 900,
-          letterSpacing: "-0.5px",
+          fontWeight: 700,
+          letterSpacing: "-0.4px",
           marginBottom: "4px",
+          fontFamily: "var(--font-display)",
         }}
       >
         {isRegenerate ? "Regenerate Song" : "New Song"}
@@ -439,7 +519,7 @@ function CreateSong() {
 
       <form
         onSubmit={handleSubmit}
-        style={{ display: "flex", flexDirection: "column", gap: "12px" }}
+        style={{ display: "flex", flexDirection: "column", gap: "20px" }}
       >
         <Field label="Title *">
           <input
@@ -630,7 +710,7 @@ function CreateSong() {
               borderColor:
                 form.prompt.length > promptLimit
                   ? "var(--error)"
-                  : "transparent",
+                  : "rgba(255,255,255,0.1)",
             }}
             onFocus={focusGreen}
             onBlur={blurRestore}

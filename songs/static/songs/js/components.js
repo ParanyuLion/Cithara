@@ -1,5 +1,21 @@
 /* Shared React components — exported to window.* for cross-script access. */
 
+(function () {
+  if (document.getElementById("cithara-styles")) return;
+  const s = document.createElement("style");
+  s.id = "cithara-styles";
+  s.textContent = [
+    "@keyframes ceq1{0%,100%{height:3px}50%{height:12px}}",
+    "@keyframes ceq2{0%,100%{height:10px}50%{height:3px}}",
+    "@keyframes ceq3{0%,100%{height:6px}50%{height:14px}}",
+    "@keyframes cithara-spin{to{transform:rotate(360deg)}}",
+    "@keyframes rowIn{from{opacity:0}to{opacity:1}}",
+    "@keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}",
+    "@keyframes slideUp{from{transform:translateY(100%);opacity:0}to{transform:translateY(0);opacity:1}}",
+  ].join("");
+  document.head.appendChild(s);
+})();
+
 function LibraryIcon({ active }) {
   return (
     <svg
@@ -238,7 +254,8 @@ function Header() {
               color: "var(--text)",
               fontSize: "18px",
               fontWeight: 800,
-              letterSpacing: "-0.4px",
+              letterSpacing: "-0.3px",
+              fontFamily: "var(--font-display)",
             }}
           >
             Cithara
@@ -566,18 +583,6 @@ function SongRow({
     return () => clearInterval(id);
   }, [song.status]);
 
-  React.useEffect(() => {
-    if (document.getElementById("cithara-eq-style")) return;
-    const s = document.createElement("style");
-    s.id = "cithara-eq-style";
-    s.textContent = [
-      "@keyframes ceq1{0%,100%{height:3px}50%{height:12px}}",
-      "@keyframes ceq2{0%,100%{height:10px}50%{height:3px}}",
-      "@keyframes ceq3{0%,100%{height:6px}50%{height:14px}}",
-    ].join("");
-    document.head.appendChild(s);
-  }, []);
-
   const thumbGradients = {
     Completed: "linear-gradient(135deg,#1DB954 0%,#0d7a3a 100%)",
     Generating: "linear-gradient(135deg,#ffa42b 0%,#b56a00 100%)",
@@ -703,6 +708,7 @@ function SongRow({
         userSelect: "none",
         position: "relative",
         overflow: "hidden",
+        animation: index !== undefined ? `rowIn 0.35s ease ${Math.min(index * 0.055, 0.44).toFixed(3)}s both` : undefined,
       }}
     >
       {/* Index — click to play/pause without navigating to detail */}
@@ -1035,7 +1041,13 @@ function SongRow({
                     : "rgba(255,255,255,0.1)",
               }}
             >
-              {copyState === "copied" ? "✓" : copyState === "error" ? "✕" : "⎘"}
+              {copyState === "copied" ? "✓" : copyState === "error" ? "✕" : (
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
+                  <polyline points="16 6 12 2 8 6"/>
+                  <line x1="12" y1="2" x2="12" y2="15"/>
+                </svg>
+              )}
             </button>
           )}
 
@@ -1115,8 +1127,261 @@ function SongRow({
   );
 }
 
+function SkeletonRow() {
+  return (
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns: "32px 52px 1fr auto",
+        alignItems: "center",
+        gap: "14px",
+        padding: "10px 14px",
+        borderRadius: "10px",
+        background: "var(--surface-2)",
+        border: "1px solid rgba(255,255,255,0.05)",
+        position: "relative",
+        overflow: "hidden",
+      }}
+    >
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          background:
+            "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.045) 50%, transparent 100%)",
+          animation: "shimmer 1.7s ease-in-out infinite",
+          pointerEvents: "none",
+        }}
+      />
+      <div
+        style={{
+          width: "13px",
+          height: "13px",
+          borderRadius: "3px",
+          background: "rgba(255,255,255,0.07)",
+          margin: "0 auto",
+        }}
+      />
+      <div
+        style={{
+          width: "52px",
+          height: "52px",
+          borderRadius: "6px",
+          background: "rgba(255,255,255,0.07)",
+        }}
+      />
+      <div>
+        <div
+          style={{
+            height: "14px",
+            width: "44%",
+            borderRadius: "4px",
+            background: "rgba(255,255,255,0.09)",
+            marginBottom: "8px",
+          }}
+        />
+        <div
+          style={{
+            height: "11px",
+            width: "31%",
+            borderRadius: "4px",
+            background: "rgba(255,255,255,0.06)",
+          }}
+        />
+      </div>
+      <div
+        style={{
+          height: "22px",
+          width: "70px",
+          borderRadius: "50px",
+          background: "rgba(255,255,255,0.07)",
+        }}
+      />
+    </div>
+  );
+}
+
+function SkeletonDetail() {
+  return (
+    <div style={{ position: "relative", overflow: "hidden" }}>
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          background:
+            "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.045) 50%, transparent 100%)",
+          animation: "shimmer 1.7s ease-in-out infinite",
+          pointerEvents: "none",
+          zIndex: 1,
+        }}
+      />
+      <div
+        style={{
+          width: "56px",
+          height: "13px",
+          borderRadius: "4px",
+          background: "rgba(255,255,255,0.07)",
+          marginBottom: "32px",
+        }}
+      />
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "flex-start",
+          marginBottom: "10px",
+          gap: "16px",
+        }}
+      >
+        <div
+          style={{
+            height: "36px",
+            width: "52%",
+            borderRadius: "6px",
+            background: "rgba(255,255,255,0.1)",
+          }}
+        />
+        <div
+          style={{
+            height: "22px",
+            width: "72px",
+            borderRadius: "50px",
+            background: "rgba(255,255,255,0.07)",
+            flexShrink: 0,
+          }}
+        />
+      </div>
+      <div
+        style={{
+          height: "14px",
+          width: "30%",
+          borderRadius: "4px",
+          background: "rgba(255,255,255,0.07)",
+          marginBottom: "6px",
+        }}
+      />
+      <div
+        style={{
+          height: "12px",
+          width: "20%",
+          borderRadius: "4px",
+          background: "rgba(255,255,255,0.05)",
+          marginBottom: "40px",
+        }}
+      />
+      <div
+        style={{
+          background: "var(--surface-2)",
+          borderRadius: "16px",
+          padding: "24px",
+          marginBottom: "32px",
+          border: "1px solid rgba(255,255,255,0.06)",
+          display: "flex",
+          gap: "24px",
+          alignItems: "flex-start",
+        }}
+      >
+        <div
+          style={{
+            width: "160px",
+            height: "160px",
+            borderRadius: "12px",
+            background: "rgba(255,255,255,0.08)",
+            flexShrink: 0,
+          }}
+        />
+        <div
+          style={{
+            flex: 1,
+            display: "flex",
+            flexDirection: "column",
+            gap: "14px",
+          }}
+        >
+          <div>
+            <div
+              style={{
+                height: "18px",
+                width: "40%",
+                borderRadius: "4px",
+                background: "rgba(255,255,255,0.1)",
+                marginBottom: "6px",
+              }}
+            />
+            <div
+              style={{
+                height: "13px",
+                width: "25%",
+                borderRadius: "4px",
+                background: "rgba(255,255,255,0.07)",
+              }}
+            />
+          </div>
+          <div
+            style={{
+              height: "64px",
+              borderRadius: "6px",
+              background: "rgba(255,255,255,0.05)",
+            }}
+          />
+          <div
+            style={{
+              height: "4px",
+              borderRadius: "2px",
+              background: "rgba(255,255,255,0.07)",
+            }}
+          />
+          <div style={{ display: "flex", gap: "16px", alignItems: "center" }}>
+            <div
+              style={{
+                width: "44px",
+                height: "44px",
+                borderRadius: "50%",
+                background: "rgba(255,255,255,0.1)",
+              }}
+            />
+            <div
+              style={{
+                height: "22px",
+                width: "64px",
+                borderRadius: "4px",
+                background: "rgba(255,255,255,0.07)",
+              }}
+            />
+          </div>
+        </div>
+      </div>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "20px 32px" }}>
+        {[1, 2, 3, 4].map((i) => (
+          <div key={i} style={{ flex: "1 1 110px" }}>
+            <div
+              style={{
+                height: "10px",
+                width: "50%",
+                borderRadius: "3px",
+                background: "rgba(255,255,255,0.07)",
+                marginBottom: "6px",
+              }}
+            />
+            <div
+              style={{
+                height: "15px",
+                width: "70%",
+                borderRadius: "4px",
+                background: "rgba(255,255,255,0.09)",
+              }}
+            />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 /* Export to window so page scripts can access them. */
 window.Header = Header;
 window.StatusBadge = StatusBadge;
 window.SongRow = SongRow;
+window.SkeletonRow = SkeletonRow;
+window.SkeletonDetail = SkeletonDetail;
 window.SPEEDS = SPEEDS;
