@@ -6,7 +6,10 @@ from pathlib import Path
 
 from django.core.files.base import ContentFile
 
-from songs.clients.base import SongGeneratorStrategy, GenerationRequest, GenerationResult, StatusResult
+from songs.clients.song_generator_strategy import SongGeneratorStrategy
+from songs.clients.generation_request import GenerationRequest
+from songs.clients.generation_result import GenerationResult
+from songs.clients.status_result import StatusResult
 
 logger = logging.getLogger(__name__)
 
