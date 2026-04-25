@@ -47,53 +47,58 @@ classDiagram
         <<Service>>
         -repository : SongRepository
         -generator : SongGeneratorStrategy
+        +list_songs() QuerySet
         +list_songs_by_creator(user) QuerySet
         +get_song(song_id) Song
-        +create_song(title, genre, mood, ocasion, singer_voice, creator, prompt) Song
+        +create_song(title, genre, mood, ocasion, singer_voice, creator, prompt, prompt_mode) Song
         +generate_song(song) Song
         +handle_suno_callback(task_id, callback_type, tracks) bool
         +delete_song(song_id) Song
         +update_song_status(song_id, status) Song
         -_build_prompt(song) str
+        -_download_audio(url) ContentFile
     }
 
     %% ── Repository Layer ────────────────────────────────────────────────────
     class SongRepository {
         <<Repository>>
+        +find_all() QuerySet
         +find_all_by_creator(user) QuerySet
         +find_by_id(song_id) Song
         +find_by_id_including_deleted(song_id) Song
         +find_by_suno_task_id(task_id) Song
         +save(song) Song
         +soft_delete(song) Song
-        +update_status(song, status, shareable_link, suno_task_id, audio_file, failure_reason) Song
+        +update_status(song, status, shareable_link, suno_task_id, audio_file, failure_reason, cover_image_url) Song
     }
 
     %% ── Client Layer ────────────────────────────────────────────────────────
     class SongGeneratorStrategy {
         <<Strategy interface>>
         +generate(request: GenerationRequest) GenerationResult
+        +get_status(task_id: str) StatusResult
     }
 
     class MockSongGeneratorStrategy {
         <<Strategy - Mock>>
-        +MOCK_AUDIO_URL : str
         +generate(request) GenerationResult
+        +get_status(task_id) StatusResult
     }
 
     class SunoSongGeneratorStrategy {
         <<Strategy - Suno>>
         -_client : SunoClient
         +generate(request) GenerationResult
+        +get_status(task_id) StatusResult
     }
 
     class SunoClient {
         <<Client>>
-        -base_url : str
+        +base_url : str
         -_headers : dict
         -_model : str
         -_callback_url : str
-        +generate(prompt) str
+        +generate(prompt, custom_mode, style, title) str
         +get_status(task_id) dict
     }
 
@@ -102,6 +107,7 @@ classDiagram
         +prompt : str
         +style : str
         +title : str
+        +custom_mode : bool
     }
 
     class GenerationResult {
@@ -109,6 +115,14 @@ classDiagram
         +task_id : str
         +audio_url : str
         +audio_content : bytes
+    }
+
+    class StatusResult {
+        <<DataClass>>
+        +status : str
+        +audio_url : str
+        +shareable_link : str
+        +image_url : str
     }
 
     %% ── Domain Layer ────────────────────────────────────────────────────────
@@ -121,8 +135,10 @@ classDiagram
         +ocasion : str
         +prompt : str
         +singer_voice : str
+        +prompt_mode : str
         +audio_file : FileField
         +shareable_link : str
+        +cover_image_url : str
         +suno_task_id : str
         +failure_reason : str
         +created_at : datetime
@@ -158,6 +174,7 @@ classDiagram
     SunoSongGeneratorStrategy --> SunoClient              : delegates to
     SongGeneratorStrategy     --> GenerationRequest       : accepts
     SongGeneratorStrategy     --> GenerationResult        : returns
+    SongGeneratorStrategy     --> StatusResult            : returns
     SongRepository            --> Song                    : manages
     Song                      --> Genre                   : has
     Song                      --> Status                  : has

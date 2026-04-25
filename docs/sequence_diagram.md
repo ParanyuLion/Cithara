@@ -40,28 +40,30 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     actor User
-    participant B   as Browser (React)
+    participant B   as Browser
     participant V   as SongView (API)
     participant SS  as SongService
     participant SR  as SongRepository
+    participant ST  as SunoSongGeneratorStrategy
     participant SC  as SunoClient
     participant SUNO as SUNO API
 
     %% ── Step 1: Create request ──────────────────────────────────────────────
     User->>B: Fill form and submit
-    B->>V: POST /songs/create/ {title, genre, mood, ocasion, singer_voice}
+    B->>V: POST /songs/create/ {title, genre, mood, ocasion, singer_voice, prompt, prompt_mode}
     Note over V: _require_auth → passes (session cookie)
-    V->>SS: create_song(title, genre, mood, ocasion, singer_voice, creator=request.user, prompt)
+    V->>SS: create_song(title, genre, mood, ocasion, singer_voice, creator, prompt, prompt_mode)
 
     SS->>SR: save(song) [status=PENDING]
     SR-->>SS: song (id assigned)
 
     %% ── Step 2: Submit to SUNO ──────────────────────────────────────────────
-    SS->>SC: generate(prompt)
-    Note over SC: customMode=false — single merged prompt:\n"Title: X. A {genre} song with {mood} mood,\nsuitable for {ocasion}, sung by {voice}. {user_prompt}"
-    SC->>SUNO: POST /api/v1/generate {customMode:false, prompt, model, callBackUrl}
+    SS->>ST: generate(GenerationRequest)
+    ST->>SC: generate(prompt, custom_mode, style, title)
+    SC->>SUNO: POST /api/v1/generate {customMode, prompt, model, callBackUrl}
     SUNO-->>SC: {data: {taskId: "..."}}
-    SC-->>SS: task_id (str)
+    SC-->>ST: task_id (str)
+    ST-->>SS: GenerationResult(task_id)
 
     SS->>SR: update_status(song, GENERATING, suno_task_id=task_id)
     SR-->>SS: song
@@ -80,8 +82,8 @@ sequenceDiagram
     SR-->>SS: song
 
     alt callbackType == "complete"
-        SS->>SS: download audio from tracks[0].audio_url
-        SS->>SR: update_status(song, COMPLETED, shareable_link, audio_file)
+        SS->>SS: _download_audio(tracks[0].audio_url)
+        SS->>SR: update_status(song, COMPLETED, shareable_link, audio_file, cover_image_url)
         SR-->>SS: song
     else callbackType == "error"
         SS->>SR: update_status(song, FAILED, failure_reason="Suno reported a generation error")
@@ -100,7 +102,7 @@ sequenceDiagram
 - All API endpoints (`/songs/*`) return `401` for unauthenticated requests, except `suno-callback` which is intentionally open (server-to-server webhook).
 - Each user sees only their own songs — `SongRepository.find_all_by_creator(user)` filters by `creator` and excludes soft-deleted songs.
 - Status transitions: `PENDING → GENERATING → COMPLETED | FAILED` (Suno) or `PENDING → COMPLETED | FAILED` (mock, synchronous).
-- Suno is called with `customMode=false` — all attributes (title, genre, mood, occasion, voice, user prompt) are merged into a single `prompt` string.
+- `SongService` calls `self.generator.generate(request)` which dispatches to the active strategy (`SunoSongGeneratorStrategy` or `MockSongGeneratorStrategy`); the strategy then calls `SunoClient`.
 - `failure_reason` is stored on the Song when status transitions to FAILED; surfaced in the detail page UI.
-- `shareable_link` is populated with the Suno `audio_url` on success.
+- `shareable_link` and `cover_image_url` are populated on success.
 - `callBackUrl` must be publicly reachable (use ngrok for local development).
